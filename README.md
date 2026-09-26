@@ -1,6 +1,6 @@
 # 🛡️ InsurMatch Backend — Spring Boot 3 & PostgreSQL
 
-> Backend REST API phục vụ cho nền tảng InsurMatch CRM & Marketplace bảo hiểm, được thiết kế và đồng bộ **khớp 100% với giao diện và luồng Frontend (`EXE201-FE`)**.
+> **InsurMatch** là giải pháp **B2B SaaS CRM** chuyên biệt cho các Công ty / Đại lý Bảo hiểm (Insurance Agencies & Brokerages). Nền tảng số hóa toàn diện quy trình tiếp nhận nhu cầu, quản lý hồ sơ khách hàng 360°, theo dõi tiến độ hợp đồng (Deals), chăm sóc khách hàng hậu mãi (Ticketing) và quyết toán hoa hồng (Commissions) — được thiết kế và đồng bộ **khớp 100% với giao diện Frontend (`EXE201-FE`)**.
 
 ---
 
@@ -10,6 +10,7 @@
 - [3. Tài Khoản Demo Mặc Định](#3-tài-khoản-demo-mặc-định)
 - [4. Hướng Dẫn Chạy Môi Trường Local](#4-hướng-dẫn-chạy-môi-trường-local)
 - [5. Thông Tin Triển Khai Render (Production)](#5-thông-tin-triển-khai-render-production)
+- [6. Ghi Chú Chi Tiết Theo Từng Nhóm API (`api.js`)](#6-ghi-chú-chi-tiết-theo-từng-nhóm-api-apijs)
 
 ---
 
@@ -59,7 +60,7 @@
 | **Kanban Pipeline & Danh sách Deal** | `GET /api/deals` | Bảng Kanban Deal (New, Contacted, Quoted, Enrolled, Bound, Closed). |
 | **Chi tiết Deal** | `GET /api/deals/{id}` | Chi tiết giá trị hợp đồng, carrier, plan, hoa hồng dự kiến. |
 | **Cập nhật tiến độ Deal** | `PUT /api/deals/{id}` | Kéo thả Kanban hoặc Agent cập nhật stage, giá trị. |
-| **Admin duyệt / Override Deal** | `PUT /api/deals/{id}/admin` | Quyền Admin can thiệp vào trạng thái hợp đồng đặc biệt. |
+| **Admin duyệt / Quản trị Deal** | `PUT /api/deals/{id}/admin` | Quyền Admin can thiệp vào NPN, Broker Effective Date, trạng thái hợp đồng. |
 
 ---
 
@@ -74,16 +75,18 @@
 
 ---
 
-### 🎫 Phân hệ 6: Hỗ trợ Khách hàng & Ticket (Ticketing & Support)
+### 🎫 Phân hệ 6: Chăm sóc Khách hàng & Hậu mãi Dịch vụ (Customer Care & Ticket Servicing)
 *Khớp với: `TicketsPage.jsx`, `TicketDetailPage.jsx`, `TicketController.java`*
+
+> 💡 **Định vị nghiệp vụ**: InsurMatch là nền tảng B2B SaaS CRM bán cho các Agency bảo hiểm. Phân hệ Ticket hoạt động như một Helpdesk chăm sóc khách hàng mua bảo hiểm (Policyholders) do Agency quản lý, phục vụ các nghiệp vụ hậu mãi: Khiếu nại bồi thường (Claim bill), chọn/đổi bác sĩ gia đình (Choose Doctor), xử lý lỗi thanh toán (Payment Issues) và bổ sung hồ sơ chứng từ (Collect Document).
 
 | Chức năng Backend | Method & Endpoint | Khớp với UI Frontend |
 |:---|:---|:---|
-| **Danh sách Ticket hỗ trợ** | `GET /api/tickets` | Bộ lọc theo Pipeline (Customer Support, Sales Support), Status, Priority. |
-| **Chi tiết Ticket** | `GET /api/tickets/{id}` | Màn hình trao đổi Ticket giữa Staff và Agent/Khách hàng. |
-| **Tạo Ticket mới** | `POST /api/tickets` | Tạo yêu cầu hỗ trợ khiếu nại, bồi thường, thủ tục. |
-| **Cập nhật Ticket** | `PUT /api/tickets/{id}` | Đổi trạng thái (OPEN, IN_PROGRESS, RESOLVED, CLOSED). |
-| **Bình luận / Thảo luận Ticket** | `POST /api/tickets/{id}/comments` | Khung chat nội bộ trao đổi trong từng Ticket. |
+| **Danh sách Ticket dịch vụ khách hàng** | `GET /api/tickets` | Bộ lọc theo Pipelines chăm sóc khách hàng (`CLIENT_SUPPORT`, `PAYMENT`, `COLLECT_DOCUMENT`, `CHOOSE_DOCTOR`). |
+| **Chi tiết Ticket** | `GET /api/tickets/{id}` | Màn hình tiếp nhận và xử lý sự vụ hậu mãi của khách hàng. |
+| **Tạo Ticket mới** | `POST /api/tickets` | Mở sự vụ hỗ trợ khách hàng mới. |
+| **Cập nhật Ticket** | `PUT /api/tickets/{id}` | Cập nhật tiến độ giải quyết (OPEN, IN_PROGRESS, RESOLVED, CLOSED). |
+| **Bình luận / Thảo luận Ticket** | `POST /api/tickets/{id}/comments` | Khung trao đổi nội bộ giữa các thành sự vụ về hồ sơ khách. |
 
 ---
 
@@ -99,16 +102,16 @@
 
 ---
 
-### 💰 Phân hệ 8: Quản lý Hoa hồng & Quyết toán (Commissions & Settlement)
+### 💰 Phân hệ 8: Quản lý Hoa hồng Đại lý & Quyết toán (Agent Commission Management & Payouts)
 *Khớp với: `CommissionsPage.jsx`, `CommissionController.java`*
 
 | Chức năng Backend | Method & Endpoint | Khớp với UI Frontend |
 |:---|:---|:---|
-| **Danh sách chi trả hoa hồng** | `GET /api/commissions` | Bảng quản lý hoa hồng theo Kỳ (Period), Nhà bảo hiểm (Carrier), Trạng thái. |
-| **Báo cáo tổng kết hoa hồng** | `GET /api/commissions/summary` | Widget tổng Gross, Net, Khấu trừ Sale Support theo từng Agent. |
-| **Ghi nhận khoản hoa hồng** | `POST /api/commissions` | Nhập dữ liệu hoa hồng nhận từ Hãng bảo hiểm. |
+| **Danh sách chi trả hoa hồng** | `GET /api/commissions` | Bảng quản lý hoa hồng đại lý theo Kỳ (Period), Hãng bảo hiểm (Carrier), Trạng thái. |
+| **Báo cáo tổng kết hoa hồng** | `GET /api/commissions/summary` | Widget tổng Gross, Net Amount theo từng Đại lý (Agent). |
+| **Ghi nhận khoản hoa hồng** | `POST /api/commissions` | Nhập dữ liệu hoa hồng nhận từ Hãng bảo hiểm đối soát cho Agent. |
 | **Cập nhật hoa hồng** | `PUT /api/commissions/{id}` | Điều chỉnh số liệu hoặc phê duyệt (PENDING, APPROVED, PAID). |
-| **Tính toán tự động hoa hồng** | `POST /api/commissions/calculate` | Tự động tính tỷ lệ chia hoa hồng theo Deal & Policy. |
+| **Tính toán tự động hoa hồng** | `POST /api/commissions/calculate` | Tự động tính toán hoa hồng theo hợp đồng và chính sách chi trả của Agency. |
 
 ---
 
@@ -196,10 +199,10 @@ Dữ liệu đã được nạp sẵn khi gọi `/api/seed`:
 
 | Role | Email | Mật khẩu | Phạm vi quyền |
 |:---|:---|:---|:---|
-| **Admin** | `admin@insurmatch.us` | `Admin@123` | Quản trị toàn sàn, duyệt Deal, quản lý tài khoản & audit logs |
-| **Staff** | `staff@insurmatch.us` | `Staff@123` | Hỗ trợ ghép Lead, giải quyết Ticket, xử lý hồ sơ tài liệu |
-| **Agent** | `agent@insurmatch.us` | `Agent@123` | Quản lý khách hàng, cơ hội bán hàng (Deal), theo dõi hoa hồng |
-| **Manager** | `manager@insurmatch.us` | `Manager@123` | Quản lý đội ngũ đại lý và báo cáo chỉ số |
+| **Admin** | `admin@insurmatch.us` | `Admin@123` | Quản trị toàn hệ thống Agency, cấu hình tài khoản & audit logs |
+| **Staff** | `staff@insurmatch.us` | `Staff@123` | Nhân viên CSKH, hỗ trợ xử lý Ticket hậu mãi, kiểm tra chứng từ |
+| **Agent** | `agent@insurmatch.us` | `Agent@123` | Đại lý bảo hiểm quản lý khách hàng, cơ hội bán hàng (Deal), theo dõi hoa hồng |
+| **Manager** | `manager@insurmatch.us` | `Manager@123` | Quản lý đội ngũ đại lý và theo dõi báo cáo chỉ số KPI |
 
 ---
 
@@ -253,19 +256,19 @@ curl http://localhost:8080/api/health
 - `getDeals(params)`: `GET /api/deals?search=&stage=&pipeline=` — Lấy danh sách hợp đồng cho Kanban board hoặc Table.
 - `getDeal(id)`: `GET /api/deals/:id` — Xem chi tiết hợp đồng bảo hiểm.
 - `updateDeal(id, data)`: `PUT /api/deals/:id` — Cập nhật thông tin gói, chuyển Deal Stage.
-- `updateDealAdmin(id, adminData)`: `PUT /api/deals/:id/admin` — Cập nhật thông tin nội bộ (NPN, Broker Effective Date, Sale Support Status...).
+- `updateDealAdmin(id, adminData)`: `PUT /api/deals/:id/admin` — Cập nhật thông tin quản trị hợp đồng (NPN, Broker Effective Date...).
 
 ### 4. Quản lý Tệp tin & Chứng từ (Documents) (Lines 89–104)
 - `getDocument(id)`: `GET /api/documents/:id` — Lấy thông tin tài liệu.
 - `addDocumentFile(docId, fileData)`: `POST /api/documents/:docId/files` — Thêm tệp chứng từ (SSN, Thẻ xanh, Bill thanh toán, LOE...).
 - `deleteDocumentFile(docId, fileId)`: `DELETE /api/documents/:docId/files/:fileId` — Xóa tệp.
 
-### 5. Quản lý Sự vụ & Vé Hỗ trợ (Tickets) (Lines 136–161)
-- `getTickets(params)`: `GET /api/tickets?pipeline=&status=&priority=&contactId=&dealId=` — Lọc theo 5 Pipelines nghiệp vụ.
-- `getTicket(id)`: `GET /api/tickets/:id` — Xem chi tiết Ticket.
-- `createTicket(data)`: `POST /api/tickets` — Mở Ticket mới.
-- `updateTicket(id, data)`: `PUT /api/tickets/:id` — Cập nhật tiến độ, trạng thái và đổi Due Date.
-- `addTicketComment(ticketId, data)`: `POST /api/tickets/:id/comments` — Thêm bình luận xử lý trong Ticket.
+### 5. Chăm sóc Khách hàng & Vé Hỗ trợ (Tickets) (Lines 136–161)
+- `getTickets(params)`: `GET /api/tickets?pipeline=&status=&priority=&contactId=&dealId=` — Lọc theo các Pipelines dịch vụ khách hàng (Claim Bill, Payment, Collect Document, Choose Doctor).
+- `getTicket(id)`: `GET /api/tickets/:id` — Xem chi tiết Ticket sự vụ.
+- `createTicket(data)`: `POST /api/tickets` — Mở Ticket hỗ trợ khách hàng mới.
+- `updateTicket(id, data)`: `PUT /api/tickets/:id` — Cập nhật tiến độ giải quyết và đổi Due Date.
+- `addTicketComment(ticketId, data)`: `POST /api/tickets/:id/comments` — Thêm bình luận trao đổi xử lý trong Ticket.
 
 ### 6. Quản lý Nhiệm vụ (Tasks) (Lines 164–185)
 - `getTasks(params)`: `GET /api/tasks?status=&priority=&assignedTo=&contactId=&dealId=` — Danh sách Todo theo người phụ trách và mức độ ưu tiên.
@@ -274,11 +277,11 @@ curl http://localhost:8080/api/health
 - `updateTask(id, data)`: `PUT /api/tasks/:id` — Cập nhật trạng thái (OPEN ➔ COMPLETED).
 
 ### 7. Quản lý Hoa hồng Đại lý (Commissions) (Lines 188–213)
-- `getCommissions(params)`: `GET /api/commissions?agentName=&period=&status=&carrier=` — Bảng danh sách hoa hồng.
+- `getCommissions(params)`: `GET /api/commissions?agentName=&period=&status=&carrier=` — Bảng danh sách hoa hồng đại lý.
 - `getCommissionSummary(agentName)`: `GET /api/commissions/summary?agentName=` — Thống kê tổng hoa hồng theo đại lý.
-- `createCommission(data)`: `POST /api/commissions` — Thêm bảng hoa hồng.
+- `createCommission(data)`: `POST /api/commissions` — Thêm bản ghi hoa hồng đối soát từ hãng.
 - `updateCommission(id, data)`: `PUT /api/commissions/:id` — Cập nhật trạng thái duyệt / chi trả.
-- `calculateCommissions(data)`: `POST /api/commissions/calculate` — Quyết toán hoa hồng.
+- `calculateCommissions(data)`: `POST /api/commissions/calculate` — Quyết toán hoa hồng cho đại lý.
 
 ### 8. Thống kê & Quản trị Hệ thống (Admin & Stats) (Lines 216–280)
 - `getDashboardStats()`: `GET /api/dashboard/stats` — Thống kê KPI chung cho Staff/Dashboard.
