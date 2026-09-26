@@ -230,3 +230,60 @@ curl http://localhost:8080/api/health
   ```env
   VITE_API_URL=https://insurmatch-api.onrender.com/api
   ```
+
+---
+
+## 6. Ghi Chú Chi Tiết Theo Từng Nhóm API (`api.js`)
+
+### 1. Cấu hình cơ bản & Kiểm tra kết nối (Lines 1–45)
+- `API_BASE`: Nhận `VITE_API_URL` hoặc mặc định `/api`.
+- `request(endpoint, options)`: Helper chuẩn hóa fetch, tự động parse JSON và xử lý HTTP error status.
+- `checkBackendHealth()`: `GET /api/health` — kiểm tra trạng thái Backend và Database.
+
+### 2. Quản lý Khách hàng & Tương tác (Lines 48–66 & 107–126)
+- `getContacts(params)`: `GET /api/contacts?search=&owner=` — Tìm kiếm và lọc danh sách Contact theo Owner.
+- `getContact(id)`: `GET /api/contacts/:id` — Lấy chi tiết hồ sơ 360° của khách hàng.
+- `createContact(data)`: `POST /api/contacts` — Thêm khách hàng mới.
+- **Tương tác trực tiếp trên hồ sơ khách hàng:**
+  - `addContactNote(contactId, data)`: `POST /api/contacts/:id/notes` — Lưu Pin Note/Ghi chú.
+  - `addContactTask(contactId, data)`: `POST /api/contacts/:id/tasks` — Tạo Task trực tiếp cho Contact.
+  - `addContactActivity(contactId, data)`: `POST /api/contacts/:id/activities` — Ghi nhận Call Log / Meeting / Email.
+
+### 3. Quản lý Hợp đồng & Gói bảo hiểm (Deals) (Lines 68–86 & 266–271)
+- `getDeals(params)`: `GET /api/deals?search=&stage=&pipeline=` — Lấy danh sách hợp đồng cho Kanban board hoặc Table.
+- `getDeal(id)`: `GET /api/deals/:id` — Xem chi tiết hợp đồng bảo hiểm.
+- `updateDeal(id, data)`: `PUT /api/deals/:id` — Cập nhật thông tin gói, chuyển Deal Stage.
+- `updateDealAdmin(id, adminData)`: `PUT /api/deals/:id/admin` — Cập nhật thông tin nội bộ (NPN, Broker Effective Date, Sale Support Status...).
+
+### 4. Quản lý Tệp tin & Chứng từ (Documents) (Lines 89–104)
+- `getDocument(id)`: `GET /api/documents/:id` — Lấy thông tin tài liệu.
+- `addDocumentFile(docId, fileData)`: `POST /api/documents/:docId/files` — Thêm tệp chứng từ (SSN, Thẻ xanh, Bill thanh toán, LOE...).
+- `deleteDocumentFile(docId, fileId)`: `DELETE /api/documents/:docId/files/:fileId` — Xóa tệp.
+
+### 5. Quản lý Sự vụ & Vé Hỗ trợ (Tickets) (Lines 136–161)
+- `getTickets(params)`: `GET /api/tickets?pipeline=&status=&priority=&contactId=&dealId=` — Lọc theo 5 Pipelines nghiệp vụ.
+- `getTicket(id)`: `GET /api/tickets/:id` — Xem chi tiết Ticket.
+- `createTicket(data)`: `POST /api/tickets` — Mở Ticket mới.
+- `updateTicket(id, data)`: `PUT /api/tickets/:id` — Cập nhật tiến độ, trạng thái và đổi Due Date.
+- `addTicketComment(ticketId, data)`: `POST /api/tickets/:id/comments` — Thêm bình luận xử lý trong Ticket.
+
+### 6. Quản lý Nhiệm vụ (Tasks) (Lines 164–185)
+- `getTasks(params)`: `GET /api/tasks?status=&priority=&assignedTo=&contactId=&dealId=` — Danh sách Todo theo người phụ trách và mức độ ưu tiên.
+- `getTask(id)`: `GET /api/tasks/:id` — Chi tiết công việc.
+- `createTask(data)`: `POST /api/tasks` — Giao nhiệm vụ mới.
+- `updateTask(id, data)`: `PUT /api/tasks/:id` — Cập nhật trạng thái (OPEN ➔ COMPLETED).
+
+### 7. Quản lý Hoa hồng Đại lý (Commissions) (Lines 188–213)
+- `getCommissions(params)`: `GET /api/commissions?agentName=&period=&status=&carrier=` — Bảng danh sách hoa hồng.
+- `getCommissionSummary(agentName)`: `GET /api/commissions/summary?agentName=` — Thống kê tổng hoa hồng theo đại lý.
+- `createCommission(data)`: `POST /api/commissions` — Thêm bảng hoa hồng.
+- `updateCommission(id, data)`: `PUT /api/commissions/:id` — Cập nhật trạng thái duyệt / chi trả.
+- `calculateCommissions(data)`: `POST /api/commissions/calculate` — Quyết toán hoa hồng.
+
+### 8. Thống kê & Quản trị Hệ thống (Admin & Stats) (Lines 216–280)
+- `getDashboardStats()`: `GET /api/dashboard/stats` — Thống kê KPI chung cho Staff/Dashboard.
+- `getAdminStats()`: `GET /api/admin/stats` — Chỉ số hệ thống dành riêng cho Admin.
+- `getAdminAccounts()` / `createAdminAccount()` / `updateAdminAccount()`: Quản lý CRUD tài khoản hệ thống (Staff, Agent, Admin).
+- `getAdminQuotes()` / `assignAdminQuote(id, data)`: Tiếp nhận và gán Lead (QuoteRequest) cho Agent phụ trách.
+- `getAdminAuditLogs()`: `GET /api/admin/audit-logs` — Nhật ký kiểm toán hệ thống.
+- `resetAndSeedDatabase()`: `POST /api/seed` — Reset và nạp dữ liệu mẫu ban đầu.
