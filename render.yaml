@@ -41,4 +41,4 @@ databases:
     plan: free
     region: singapore
     databaseName: insurmatch_db
-    user: postgres
+    user: insurmatch_user
