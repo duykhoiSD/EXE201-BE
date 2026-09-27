@@ -56,14 +56,14 @@ public class SeedController {
                 .email("admin@insurmatch.us")
                 .password(passwordEncoder.encode("Admin@123"))
                 .firstName("Super").lastName("Admin")
-                .role(User.Role.ADMIN).active(true).build());
+                .role(User.Role.ADMIN).active(true).emailVerified(true).build());
 
         User staff = userRepository.save(User.builder()
                 .email("staff@insurmatch.us")
                 .password(passwordEncoder.encode("Staff@123"))
                 .firstName("Platform").lastName("Staff")
                 .phone("832-555-0101")
-                .role(User.Role.SUPPORT).active(true).build());
+                .role(User.Role.SUPPORT).active(true).emailVerified(true).build());
 
         User agent = userRepository.save(User.builder()
                 .email("agent@insurmatch.us")
@@ -71,14 +71,14 @@ public class SeedController {
                 .firstName("Licensed").lastName("Agent")
                 .phone("832-555-0202")
                 .npn("20011862")
-                .role(User.Role.AGENT).active(true).build());
+                .role(User.Role.AGENT).active(true).emailVerified(true).build());
 
         User manager = userRepository.save(User.builder()
                 .email("manager@insurmatch.us")
                 .password(passwordEncoder.encode("Manager@123"))
                 .firstName("Khanh").lastName("Nguyen")
                 .phone("832-555-0303")
-                .role(User.Role.MANAGER).active(true).build());
+                .role(User.Role.MANAGER).active(true).emailVerified(true).build());
 
         // ── Seed Contacts ────────────────────────────────────────────────────
         Contact c1 = contactRepository.save(Contact.builder()

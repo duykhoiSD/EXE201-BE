@@ -21,8 +21,11 @@
 
 | Chức năng Backend | Method & Endpoint | Khớp với UI Frontend |
 |:---|:---|:---|
-| **Đăng nhập & Cấp JWT** | `POST /api/auth/login` | Form đăng nhập phân quyền cho 3 Actor: `ADMIN`, `STAFF`, `AGENT`. |
-| **Lấy thông tin phiên đăng nhập** | `GET /api/auth/me` | Navbar, User Profile, Header Avatar và điều hướng Router theo Role. |
+| **Đăng ký tài khoản & Nhận OTP** | `POST /api/auth/register` | Form đăng ký đại lý/nhân viên mới qua Email, tự động tạo mã OTP 6 số (hạn 5 phút). |
+| **Xác thực OTP & Kích hoạt tài khoản** | `POST /api/auth/verify-otp` | Nhập mã OTP kích hoạt tài khoản, tự động cấp JWT Token để đăng nhập ngay. |
+| **Gửi lại mã OTP** | `POST /api/auth/resend-otp` | Nút "Gửi lại mã" khi OTP cũ quá hạn 5 phút. |
+| **Đăng nhập & Cấp JWT** | `POST /api/auth/login` | Form đăng nhập phân quyền cho 3 Actor: `ADMIN`, `STAFF`, `AGENT`. Cấp JWT Token. |
+| **Lấy thông tin phiên đăng nhập** | `GET /api/auth/me` | Lấy thông tin user hiện tại thông qua Bearer JWT Token. |
 | **Đăng xuất** | `POST /api/auth/logout` | Đăng xuất và dọn dẹp token ở Client. |
 
 ---
