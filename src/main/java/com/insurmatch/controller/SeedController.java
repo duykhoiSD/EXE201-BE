@@ -56,6 +56,9 @@ public class SeedController {
                 .email("admin@insurmatch.us")
                 .password(passwordEncoder.encode("Admin@123"))
                 .firstName("Super").lastName("Admin")
+                .department("Executive Office")
+                .status("Active")
+                .complianceStatus("Verified & Cleared")
                 .role(User.Role.ADMIN).active(true).emailVerified(true).build());
 
         User staff = userRepository.save(User.builder()
@@ -63,14 +66,22 @@ public class SeedController {
                 .password(passwordEncoder.encode("Staff@123"))
                 .firstName("Platform").lastName("Staff")
                 .phone("832-555-0101")
-                .role(User.Role.SUPPORT).active(true).emailVerified(true).build());
+                .department("Operations Hub")
+                .status("Active")
+                .complianceStatus("Verified & Cleared")
+                .role(User.Role.STAFF).active(true).emailVerified(true).build());
 
         User agent = userRepository.save(User.builder()
                 .email("agent@insurmatch.us")
                 .password(passwordEncoder.encode("Agent@123"))
-                .firstName("Licensed").lastName("Agent")
+                .firstName("Licensed").lastName("Agent Partner")
                 .phone("832-555-0202")
                 .npn("20011862")
+                .department("Regional Agent Network")
+                .statesLicensed("TX (TDI), CA (CDI)")
+                .status("Active")
+                .complianceStatus("Verified & Cleared")
+                .dealsCount(5)
                 .role(User.Role.AGENT).active(true).emailVerified(true).build());
 
         User manager = userRepository.save(User.builder()
@@ -78,6 +89,9 @@ public class SeedController {
                 .password(passwordEncoder.encode("Manager@123"))
                 .firstName("Khanh").lastName("Nguyen")
                 .phone("832-555-0303")
+                .department("Regional Management")
+                .status("Active")
+                .complianceStatus("Verified & Cleared")
                 .role(User.Role.MANAGER).active(true).emailVerified(true).build());
 
         // ── Seed Contacts ────────────────────────────────────────────────────

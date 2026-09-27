@@ -202,4 +202,101 @@ public class EmailService {
                 "</body>" +
                 "</html>";
     }
+
+    /**
+     * Gửi email chào mừng và bàn giao thông tin đăng nhập Portal cho Agent/Staff mới do Admin tạo.
+     */
+    public boolean sendWelcomeAccountEmail(String toEmail, String recipientName, String temporaryPassword, String roleName) {
+        log.info("\n" +
+                "================================================================================\n" +
+                "🎉 [INSURMATCH EMAIL SERVICE — WELCOME NEW MEMBER]\n" +
+                "--------------------------------------------------------------------------------\n" +
+                "To:                 {} ({})\n" +
+                "Role:               {}\n" +
+                "Initial Password:   {}\n" +
+                "Portal URL:         http://localhost:5173/login\n" +
+                "================================================================================",
+                toEmail, recipientName != null ? recipientName : "Member", roleName, temporaryPassword);
+
+        if (mailSender == null) {
+            log.info("JavaMailSender is not configured. Account info printed to console.");
+            return true;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, "InsurMatch Platform");
+            helper.setTo(toEmail);
+            helper.setSubject("🎉 [InsurMatch] Thông tin tài khoản cổng đối tác của bạn");
+
+            String htmlContent = buildWelcomeAccountHtmlContent(recipientName, toEmail, temporaryPassword, roleName);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Successfully sent Welcome Account email to {}", toEmail);
+            return true;
+        } catch (Exception e) {
+            log.warn("Could not send real welcome email to {} (Reason: {}). Credentials are in console.", toEmail, e.getMessage());
+            return true;
+        }
+    }
+
+    private String buildWelcomeAccountHtmlContent(String name, String email, String password, String role) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head><meta charset='UTF-8'></head>" +
+                "<body style='margin:0;padding:0;background-color:#0B172A;font-family:Arial,sans-serif;'>" +
+                "  <table width='100%' border='0' cellspacing='0' cellpadding='0' style='background-color:#0B172A;padding:40px 10px;'>" +
+                "    <tr>" +
+                "      <td align='center'>" +
+                "        <table width='600' border='0' cellspacing='0' cellpadding='0' style='background-color:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.3);'>" +
+                "          <!-- Header -->" +
+                "          <tr>" +
+                "            <td style='background-color:#0B172A;padding:32px 40px;text-align:center;border-bottom:3px solid #C8A96B;'>" +
+                "              <h1 style='color:#FFFFFF;margin:0;font-size:24px;letter-spacing:1px;'>INSUR<span style='color:#C8A96B;'>MATCH</span></h1>" +
+                "              <p style='color:#94A3B8;margin:6px 0 0 0;font-size:12px;text-transform:uppercase;letter-spacing:2px;'>Partner Portal Access</p>" +
+                "            </td>" +
+                "          </tr>" +
+                "          <!-- Body -->" +
+                "          <tr>" +
+                "            <td style='padding:40px;'>" +
+                "              <h2 style='color:#0F172A;margin-top:0;font-size:20px;'>Chào mừng bạn gia nhập mạng lưới InsurMatch!</h2>" +
+                "              <p style='color:#475569;font-size:15px;line-height:1.6;margin-bottom:20px;'>" +
+                "                Xin chào <strong>" + (name != null ? name : "Quý đối tác") + "</strong>,<br>" +
+                "                Quản trị viên đã khởi tạo thành công tài khoản thành viên của bạn trên nền tảng <strong>InsurMatch CRM</strong> với vai trò: <strong style='color:#0B172A;text-transform:uppercase;'>" + role + "</strong>." +
+                "              </p>" +
+                "              <!-- Credentials Box -->" +
+                "              <div style='background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin:24px 0;'>" +
+                "                <div style='margin-bottom:10px;font-size:14px;color:#334155;'>" +
+                "                  <strong>Tài khoản đăng nhập:</strong> <span style='font-family:monospace;color:#0B172A;font-weight:bold;'>" + email + "</span>" +
+                "                </div>" +
+                "                <div style='font-size:14px;color:#334155;'>" +
+                "                  <strong>Mật khẩu khởi tạo:</strong> <span style='font-family:monospace;background:#FEF3C7;padding:3px 8px;border-radius:6px;color:#92400E;font-weight:bold;'>" + password + "</span>" +
+                "                </div>" +
+                "              </div>" +
+                "              <!-- CTA Button -->" +
+                "              <div style='text-align:center;margin:30px 0;'>" +
+                "                <a href='http://localhost:5173/login' style='background-color:#0B172A;color:#FFFFFF;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(11,23,42,0.2);'>Đăng Nhập Cổng Portal →</a>" +
+                "              </div>" +
+                "              <p style='color:#64748B;font-size:13px;line-height:1.5;'>" +
+                "                🔒 <em>Lưu ý an ninh:</em> Vì lý do bảo mật, vui lòng đăng nhập và thực hiện đổi mật khẩu cá nhân ngay trong lần truy cập đầu tiên." +
+                "              </p>" +
+                "            </td>" +
+                "          </tr>" +
+                "          <!-- Footer -->" +
+                "          <tr>" +
+                "            <td style='background-color:#F8FAFC;padding:24px;text-align:center;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:12px;'>" +
+                "              © 2026 InsurMatch Platform. All rights reserved.<br>" +
+                "              Hệ thống quản trị và phân phối bảo hiểm chuyên nghiệp." +
+                "            </td>" +
+                "          </tr>" +
+                "        </table>" +
+                "      </td>" +
+                "    </tr>" +
+                "  </table>" +
+                "</body>" +
+                "</html>";
+    }
 }

@@ -63,6 +63,27 @@ public class User {
     @Column(length = 50)
     private String npn;
 
+    @Column(length = 100)
+    private String department;
+
+    @Column(name = "states_licensed", length = 255)
+    private String statesLicensed;
+
+    @Column(length = 50)
+    @Builder.Default
+    private String status = "Active";
+
+    @Column(name = "compliance_status", length = 100)
+    @Builder.Default
+    private String complianceStatus = "Verified & Cleared";
+
+    @Column(name = "suspension_reason", length = 255)
+    private String suspensionReason;
+
+    @Column(name = "deals_count")
+    @Builder.Default
+    private Integer dealsCount = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -71,7 +92,22 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public String getName() {
+        String first = firstName != null ? firstName : "";
+        String last = lastName != null ? lastName : "";
+        String full = (first + " " + last).trim();
+        return full.isEmpty() ? email : full;
+    }
+
+    public String getAvatar() {
+        String initial = "";
+        if (firstName != null && !firstName.isEmpty()) initial += firstName.charAt(0);
+        if (lastName != null && !lastName.isEmpty()) initial += lastName.charAt(0);
+        if (initial.isEmpty() && email != null && !email.isEmpty()) initial = email.substring(0, Math.min(2, email.length()));
+        return initial.toUpperCase();
+    }
+
     public enum Role {
-        ADMIN, MANAGER, SUPPORT, AGENT, TELESALES
+        ADMIN, STAFF, AGENT, MANAGER, SUPPORT, TELESALES
     }
 }
