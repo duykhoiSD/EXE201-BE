@@ -54,6 +54,14 @@ public class ContactController {
         return ResponseEntity.ok(ApiResponse.success("Contact created", created));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Contact>> updateContact(
+            @PathVariable Long id,
+            @RequestBody Contact contact) {
+        Contact updated = contactService.updateContact(id, contact);
+        return ResponseEntity.ok(ApiResponse.success("Contact updated", updated));
+    }
+
     @PostMapping("/{id}/notes")
     public ResponseEntity<ApiResponse<Note>> addNote(@PathVariable Long id, @RequestBody Note note) {
         Contact contact = contactService.getContactById(id);
