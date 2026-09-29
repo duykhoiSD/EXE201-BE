@@ -38,8 +38,17 @@ public class Task {
     @Builder.Default
     private String status = "OPEN"; // OPEN, IN_PROGRESS, COMPLETED
 
+    @Column(name = "task_type", length = 50)
+    @Builder.Default
+    private String taskType = "Call"; // Call, To Do, Email, Meeting
+
     @Column(name = "due_date")
     private LocalDate dueDate;
+
+    @Transient
+    public Boolean getCompleted() {
+        return "COMPLETED".equalsIgnoreCase(status) || "DONE".equalsIgnoreCase(status);
+    }
 
     // ---- Relationships ----
     @ManyToOne(fetch = FetchType.LAZY)

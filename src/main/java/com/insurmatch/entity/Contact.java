@@ -139,4 +139,24 @@ public class Contact {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    public String getFullName() {
+        StringBuilder sb = new StringBuilder();
+        if (firstName != null && !firstName.isBlank()) sb.append(firstName.trim());
+        if (middleName != null && !middleName.isBlank()) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(middleName.trim());
+        }
+        if (lastName != null && !lastName.isBlank()) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(lastName.trim());
+        }
+        return sb.length() > 0 ? sb.toString() : (email != null ? email : "Contact #" + id);
+    }
+
+    @Transient
+    public String getCode() {
+        return "CT2600" + (id != null ? (2000 + id) : "0000");
+    }
 }

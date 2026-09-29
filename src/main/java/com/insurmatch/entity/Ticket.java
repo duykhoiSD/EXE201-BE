@@ -28,11 +28,11 @@ public class Ticket {
     @Column(name = "ticket_name", nullable = false, length = 255)
     private String ticketName;
 
-    // Pipeline: CLIENT_SUPPORT, PAYMENT, COLLECT_DOCUMENT, CHOOSE_DOCTOR, AGENT_SUPPORT
-    @Column(nullable = false, length = 30)
+    // Pipeline: CLIENT_SUPPORT, PAYMENT, COLLECT_DOCUMENT, CHOOSE_DOCTOR, AGENT_SUPPORT, etc.
+    @Column(nullable = false, length = 100)
     private String pipeline;
 
-    @Column(name = "ticket_status", nullable = false, length = 50)
+    @Column(name = "ticket_status", nullable = false, length = 100)
     private String ticketStatus;
 
     @Column(name = "ticket_description", columnDefinition = "TEXT")
@@ -41,8 +41,8 @@ public class Ticket {
     @Column(name = "ticket_result", columnDefinition = "TEXT")
     private String ticketResult;
 
-    // Priority: HIGH, MEDIUM, LOW
-    @Column(nullable = false, length = 10)
+    // Priority: HIGH, MEDIUM, LOW, URGENT, NONE
+    @Column(nullable = false, length = 30)
     @Builder.Default
     private String priority = "MEDIUM";
 

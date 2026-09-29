@@ -39,6 +39,12 @@ public class User {
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
+    @Transient
+    public String getFullName() {
+        String full = (firstName != null ? firstName : "") + (lastName != null ? " " + lastName : "");
+        return full.trim().isEmpty() ? email : full.trim();
+    }
+
     @Column(length = 20)
     private String phone;
 

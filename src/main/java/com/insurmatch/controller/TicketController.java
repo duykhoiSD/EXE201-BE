@@ -59,4 +59,10 @@ public class TicketController {
         TicketComment saved = ticketService.addComment(id, comment);
         return ResponseEntity.ok(ApiResponse.success("Comment added", saved));
     }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<ApiResponse<List<TicketComment>>> getComments(@PathVariable Long id) {
+        List<TicketComment> comments = ticketService.getComments(id);
+        return ResponseEntity.ok(ApiResponse.success(comments));
+    }
 }

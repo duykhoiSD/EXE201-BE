@@ -13,6 +13,10 @@ import com.insurmatch.entity.User;
 import com.insurmatch.exception.ResourceNotFoundException;
 import com.insurmatch.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContactService {
 
     private final ContactRepository contactRepository;
@@ -32,28 +37,44 @@ public class ContactService {
     private final CustomerDocumentRepository customerDocumentRepository;
     private final UserRepository userRepository;
 
+    private User getCurrentAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equalsIgnoreCase("anonymousUser")) {
+            return userRepository.findByEmail(auth.getName()).orElse(null);
+        }
+        return null;
+    }
+
     // ===================== LIST & SEARCH =====================
 
     public List<Contact> getAllContacts(String search, String owner) {
+        User currentUser = getCurrentAuthenticatedUser();
+        Long ownerId = null;
+
+        // RBAC: Agent can only view their own contacts
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            ownerId = currentUser.getId();
+            log.info("RBAC: Scoping contacts strictly for agent: {} (id: {})", currentUser.getEmail(), currentUser.getId());
+        } else if (owner != null && !owner.isBlank() && !owner.equalsIgnoreCase("all")) {
+            try {
+                ownerId = Long.parseLong(owner);
+            } catch (NumberFormatException e) {
+                List<User> found = userRepository.searchByNameOrEmail(owner);
+                if (!found.isEmpty()) {
+                    ownerId = found.get(0).getId();
+                }
+            }
+        }
+
         boolean hasSearch = search != null && !search.isBlank();
-        boolean hasOwner = owner != null && !owner.isBlank() && !owner.equalsIgnoreCase("all");
+        boolean hasOwner = ownerId != null;
 
         if (hasSearch && hasOwner) {
-            try {
-                Long ownerId = Long.parseLong(owner);
-                return contactRepository.searchContactsByOwner(search, ownerId);
-            } catch (NumberFormatException e) {
-                return contactRepository.searchContacts(search);
-            }
+            return contactRepository.searchContactsByOwner(search, ownerId);
         } else if (hasSearch) {
             return contactRepository.searchContacts(search);
         } else if (hasOwner) {
-            try {
-                Long ownerId = Long.parseLong(owner);
-                return contactRepository.findByContactOwnerId(ownerId);
-            } catch (NumberFormatException e) {
-                return contactRepository.findAll();
-            }
+            return contactRepository.findByContactOwnerId(ownerId);
         }
         return contactRepository.findAll();
     }
@@ -61,8 +82,18 @@ public class ContactService {
     // ===================== GET BY ID =====================
 
     public Contact getContactById(Long id) {
-        return contactRepository.findById(id)
+        Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+
+        // RBAC: Agent can only view their own contact
+        User currentUser = getCurrentAuthenticatedUser();
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            if (contact.getContactOwner() == null || !contact.getContactOwner().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Bạn chỉ có quyền xem hồ sơ khách hàng do mình phụ trách!");
+            }
+        }
+
+        return contact;
     }
 
     public Contact getContactByIdOrCode(String identifier) {
@@ -119,11 +150,22 @@ public class ContactService {
 
     @Transactional
     public Contact createContact(Contact contact) {
+        User currentUser = getCurrentAuthenticatedUser();
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            contact.setContactOwner(currentUser);
+        } else if (contact.getContactOwner() == null && currentUser != null) {
+            contact.setContactOwner(currentUser);
+        }
         return contactRepository.save(contact);
     }
 
     @Transactional
     public Contact createContactFromDTO(ContactDTO dto) {
+        User currentUser = getCurrentAuthenticatedUser();
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            dto.setContactOwnerId(currentUser.getId());
+            dto.setContactOwnerName(currentUser.getName());
+        }
         Contact contact = new Contact();
         applyDTOToEntity(dto, contact);
         return contactRepository.save(contact);
@@ -134,7 +176,22 @@ public class ContactService {
     @Transactional
     public Contact updateContact(Long id, Contact contactData) {
         Contact existing = getContactById(id);
-        // ---- About ----
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // RBAC: Check edit permission & Reassignment rights
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            if (existing.getContactOwner() == null || !existing.getContactOwner().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Bạn chỉ có quyền cập nhật hồ sơ khách hàng do mình phụ trách!");
+            }
+            // Agent CANNOT reassign contact owner
+        } else {
+            // ADMIN / STAFF can assign & reassign contact owner
+            if (contactData.getContactOwner() != null) {
+                existing.setContactOwner(contactData.getContactOwner());
+            }
+        }
+
+        // Update fields that are not null
         if (contactData.getFirstName() != null) existing.setFirstName(contactData.getFirstName());
         if (contactData.getLastName() != null) existing.setLastName(contactData.getLastName());
         if (contactData.getMiddleName() != null) existing.setMiddleName(contactData.getMiddleName());
@@ -173,8 +230,6 @@ public class ContactService {
         if (contactData.getObShareOwner() != null) existing.setObShareOwner(contactData.getObShareOwner());
         if (contactData.getMedicareShareOwner() != null) existing.setMedicareShareOwner(contactData.getMedicareShareOwner());
         if (contactData.getLifeShareOwner() != null) existing.setLifeShareOwner(contactData.getLifeShareOwner());
-        // ---- Owner / Support Agent (nếu FE gửi object) ----
-        if (contactData.getContactOwner() != null) existing.setContactOwner(contactData.getContactOwner());
         if (contactData.getSupportAgent() != null) existing.setSupportAgent(contactData.getSupportAgent());
 
         return contactRepository.save(existing);
@@ -183,6 +238,12 @@ public class ContactService {
     @Transactional
     public Contact updateContactFromDTO(Long id, ContactDTO dto) {
         Contact existing = getContactById(id);
+        User currentUser = getCurrentAuthenticatedUser();
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            // Agent cannot reassign contact owner
+            dto.setContactOwnerId(null);
+            dto.setContactOwnerName(null);
+        }
         applyDTOToEntity(dto, existing);
         return contactRepository.save(existing);
     }

@@ -119,6 +119,49 @@ public class Deal {
     @Column(name = "termination_reason", length = 500)
     private String terminationReason;
 
+    // ---- FE Specific / Extended Fields ----
+    @Column(length = 50)
+    private String code;
+
+    @Column(name = "selling_state", length = 100)
+    private String sellingState;
+
+    @Column(length = 150)
+    private String member;
+
+    @Column(name = "primary_member_id", length = 50)
+    private String primaryMemberId;
+
+    @Column(name = "number_member")
+    private Integer numberMember;
+
+    @Column(name = "closed_lost_reason", length = 255)
+    private String closedLostReason;
+
+    @Column(name = "enrolled_address", length = 255)
+    private String enrolledAddress;
+
+    @Column(name = "quoted_county", length = 100)
+    private String quotedCounty;
+
+    @Column(name = "is_backdate_deal", length = 10)
+    private String isBackdateDeal;
+
+    @Column(name = "close_date", length = 50)
+    private String closeDate;
+
+    @Column(name = "monthly_premium")
+    private BigDecimal monthlyPremium;
+
+    @Column(name = "subsidy_amount")
+    private BigDecimal subsidyAmount;
+
+    @Column(name = "agency_commission")
+    private BigDecimal agencyCommission;
+
+    @Column(name = "bonus_tier", length = 50)
+    private String bonusTier;
+
     // ---- Relationships ----
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contact_id", nullable = false)
@@ -139,4 +182,66 @@ public class Deal {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ---- Helper methods for Frontend compatibility ----
+    @Transient
+    public String getTitle() {
+        return dealName;
+    }
+
+    public void setTitle(String title) {
+        this.dealName = title;
+    }
+
+    @Transient
+    public String getStage() {
+        return dealStage;
+    }
+
+    public void setStage(String stage) {
+        this.dealStage = stage;
+    }
+
+    @Transient
+    public String getShortTitle() {
+        if (dealName == null) return "";
+        return dealName.length() > 25 ? dealName.substring(0, 25) + "..." : dealName;
+    }
+
+    @Transient
+    public String getDisplayCode() {
+        if (code != null && !code.isBlank()) return code;
+        return "D2600" + (id != null ? (5000 + id) : "5000");
+    }
+
+    @Transient
+    public String getContactName() {
+        return contact != null ? contact.getFullName() : "";
+    }
+
+    @Transient
+    public Long getContactId() {
+        return contact != null ? contact.getId() : null;
+    }
+
+    @Transient
+    public String getStageBadge() {
+        if (dealStage == null) return "Ready to Enroll";
+        if (dealStage.contains("Ready")) return "Ready to Enroll";
+        if (dealStage.contains("Active")) return "Active";
+        if (dealStage.contains("Enrolled")) return "Enrolled";
+        if (dealStage.contains("Lost")) return "Deal Lost";
+        if (dealStage.contains("Termination") || dealStage.contains("Term")) return "Terminated";
+        return dealStage.length() > 18 ? dealStage.substring(0, 18) : dealStage;
+    }
+
+    @Transient
+    public String getStageColor() {
+        if (dealStage == null) return "bg-blue-50 text-blue-700 border-blue-200";
+        if (dealStage.contains("Active")) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (dealStage.contains("Ready")) return "bg-blue-50 text-blue-700 border-blue-200";
+        if (dealStage.contains("Waiting") || dealStage.contains("Uploaded")) return "bg-amber-50 text-amber-700 border-amber-200";
+        if (dealStage.contains("Lost") || dealStage.contains("Term")) return "bg-rose-50 text-rose-700 border-rose-200";
+        return "bg-slate-50 text-slate-700 border-slate-200";
+    }
 }

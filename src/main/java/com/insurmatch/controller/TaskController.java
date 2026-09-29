@@ -29,8 +29,9 @@ public class TaskController {
             @RequestParam(required = false) String priority,
             @RequestParam(required = false) Long assignedTo,
             @RequestParam(required = false) Long contactId,
-            @RequestParam(required = false) Long dealId) {
-        List<Task> tasks = taskService.getAllTasks(status, priority, assignedTo, contactId, dealId);
+            @RequestParam(required = false) Long dealId,
+            @RequestParam(required = false) Long ticketId) {
+        List<Task> tasks = taskService.getAllTasks(status, priority, assignedTo, contactId, dealId, ticketId);
         return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 
@@ -50,5 +51,11 @@ public class TaskController {
     public ResponseEntity<ApiResponse<Task>> updateTask(@PathVariable Long id, @RequestBody Task taskData) {
         Task updated = taskService.updateTask(id, taskData);
         return ResponseEntity.ok(ApiResponse.success("Task updated", updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.ok(ApiResponse.success("Task deleted", null));
     }
 }
