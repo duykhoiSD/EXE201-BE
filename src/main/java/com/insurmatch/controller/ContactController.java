@@ -134,6 +134,9 @@ public class ContactController {
     public ResponseEntity<ApiResponse<Task>> addTask(@PathVariable Long id, @RequestBody Task task) {
         Contact contact = contactService.getContactById(id);
         task.setContact(contact);
+        if (task.getDueDate() == null) {
+            task.setDueDate(java.time.LocalDate.now().plusDays(3));
+        }
         Task saved = taskRepository.save(task);
         return ResponseEntity.ok(ApiResponse.success("Task added", saved));
     }

@@ -65,4 +65,10 @@ public class TicketController {
         List<TicketComment> comments = ticketService.getComments(id);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteTicket(@PathVariable Long id) {
+        ticketService.deleteTicket(id);
+        return ResponseEntity.ok(ApiResponse.success("Ticket deleted", null));
+    }
 }
