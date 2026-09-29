@@ -29,21 +29,27 @@ public class SeedController {
     private final ContactRepository contactRepository;
     private final DealRepository dealRepository;
     private final TicketRepository ticketRepository;
+    private final TicketCommentRepository ticketCommentRepository;
     private final TaskRepository taskRepository;
     private final QuoteRequestRepository quoteRequestRepository;
     private final NoteRepository noteRepository;
     private final ActivityRepository activityRepository;
     private final CommissionRepository commissionRepository;
     private final AuditLogRepository auditLogRepository;
+    private final CustomerDocumentRepository documentRepository;
+    private final DocumentFileRepository fileRepository;
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/seed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> seedDatabase() {
         // Clear all data in correct order (respect FK constraints)
+        fileRepository.deleteAll();
+        documentRepository.deleteAll();
         commissionRepository.deleteAll();
         activityRepository.deleteAll();
         noteRepository.deleteAll();
         taskRepository.deleteAll();
+        ticketCommentRepository.deleteAll();
         ticketRepository.deleteAll();
         dealRepository.deleteAll();
         quoteRequestRepository.deleteAll();
@@ -265,6 +271,77 @@ public class SeedController {
                 .period("2026-09").status("PENDING")
                 .deal(d1).build());
 
+        // ── Seed Customer Documents & Files ───────────────────────────────────
+        CustomerDocument doc1 = documentRepository.save(CustomerDocument.builder()
+                .name("Minh Tran")
+                .initials("MT")
+                .contactOwner("Manager User (manager@insurmatch.us)")
+                .lastModifiedBy("Manager User")
+                .contact(c1)
+                .build());
+
+        fileRepository.save(DocumentFile.builder()
+                .document(doc1)
+                .category("identity")
+                .name("Driver_License_Front.jpg")
+                .fullName("Driver_License_Front.jpg")
+                .size("2.1 MB")
+                .type("image")
+                .build());
+
+        fileRepository.save(DocumentFile.builder()
+                .document(doc1)
+                .category("consentFormMkp")
+                .name("CMS_Marketplace_Consent.pdf")
+                .fullName("CMS_Marketplace_Consent.pdf")
+                .size("480 KB")
+                .type("pdf")
+                .build());
+
+        fileRepository.save(DocumentFile.builder()
+                .document(doc1)
+                .category("paymentInformation")
+                .name("Bank_Debit_Auth_Form.pdf")
+                .fullName("Bank_Debit_Auth_Form.pdf")
+                .size("320 KB")
+                .type("pdf")
+                .build());
+
+        CustomerDocument doc2 = documentRepository.save(CustomerDocument.builder()
+                .name("Lan Nguyen")
+                .initials("LN")
+                .contactOwner("Licensed Agent (agent@insurmatch.us)")
+                .lastModifiedBy("Licensed Agent")
+                .contact(c2)
+                .build());
+
+        fileRepository.save(DocumentFile.builder()
+                .document(doc2)
+                .category("identity")
+                .name("US_Passport_Scan.pdf")
+                .fullName("US_Passport_Scan.pdf")
+                .size("1.4 MB")
+                .type("pdf")
+                .build());
+
+        fileRepository.save(DocumentFile.builder()
+                .document(doc2)
+                .category("consentFormText")
+                .name("SMS_Confirmation_Screenshot.png")
+                .fullName("SMS_Confirmation_Screenshot.png")
+                .size("850 KB")
+                .type("image")
+                .build());
+
+        fileRepository.save(DocumentFile.builder()
+                .document(doc2)
+                .category("tax")
+                .name("Tax_1040_Income_Proof.pdf")
+                .fullName("Tax_1040_Income_Proof.pdf")
+                .size("2.3 MB")
+                .type("pdf")
+                .build());
+
         Map<String, Object> result = Map.of(
                 "users", 4,
                 "contacts", 2,
@@ -273,7 +350,8 @@ public class SeedController {
                 "tasks", 2,
                 "quoteRequests", 2,
                 "notes", 1,
-                "commissions", 1
+                "commissions", 1,
+                "documents", 2
         );
 
         return ResponseEntity.ok(ApiResponse.success("Database seeded successfully", result));

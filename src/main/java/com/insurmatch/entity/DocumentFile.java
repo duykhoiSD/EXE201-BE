@@ -39,6 +39,7 @@ public class DocumentFile {
     @Builder.Default
     private String url = "";
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false)
     private CustomerDocument document;
