@@ -31,14 +31,16 @@ public class TicketController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
             @RequestParam(required = false) Long contactId,
-            @RequestParam(required = false) Long dealId) {
-        List<Ticket> tickets = ticketService.getAllTickets(pipeline, status, priority, contactId, dealId);
+            @RequestParam(required = false) Long dealId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String owner) {
+        List<Ticket> tickets = ticketService.getAllTickets(pipeline, status, priority, contactId, dealId, search, owner);
         return ResponseEntity.ok(ApiResponse.success(tickets));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Ticket>> getTicket(@PathVariable Long id) {
-        Ticket ticket = ticketService.getTicketById(id);
+    public ResponseEntity<ApiResponse<Ticket>> getTicket(@PathVariable String id) {
+        Ticket ticket = ticketService.getTicketByIdOrCode(id);
         return ResponseEntity.ok(ApiResponse.success(ticket));
     }
 
@@ -49,25 +51,25 @@ public class TicketController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Ticket>> updateTicket(@PathVariable Long id, @RequestBody Ticket ticketData) {
+    public ResponseEntity<ApiResponse<Ticket>> updateTicket(@PathVariable String id, @RequestBody Ticket ticketData) {
         Ticket updated = ticketService.updateTicket(id, ticketData);
         return ResponseEntity.ok(ApiResponse.success("Ticket updated", updated));
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<ApiResponse<TicketComment>> addComment(@PathVariable Long id, @RequestBody TicketComment comment) {
+    public ResponseEntity<ApiResponse<TicketComment>> addComment(@PathVariable String id, @RequestBody TicketComment comment) {
         TicketComment saved = ticketService.addComment(id, comment);
         return ResponseEntity.ok(ApiResponse.success("Comment added", saved));
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<ApiResponse<List<TicketComment>>> getComments(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<TicketComment>>> getComments(@PathVariable String id) {
         List<TicketComment> comments = ticketService.getComments(id);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteTicket(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteTicket(@PathVariable String id) {
         ticketService.deleteTicket(id);
         return ResponseEntity.ok(ApiResponse.success("Ticket deleted", null));
     }

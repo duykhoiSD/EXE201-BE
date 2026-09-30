@@ -71,7 +71,31 @@ public class Task {
     @JoinColumn(name = "created_by_id")
     private User createdBy;
 
+    @Column(name = "code", length = 50)
+    private String code;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Transient
+    public String getCode() {
+        if (code != null && !code.isBlank()) return code;
+        return "TSK2600" + (id != null ? (1000 + id) : "1000");
+    }
+
+    @Transient
+    public String getAssignedToName() {
+        return assignedTo != null ? assignedTo.getFullName() : null;
+    }
+
+    @Transient
+    public String getContactName() {
+        return contact != null ? contact.getFullName() : null;
+    }
+
+    @Transient
+    public String getDealTitle() {
+        return deal != null ? deal.getDealName() : null;
+    }
 }

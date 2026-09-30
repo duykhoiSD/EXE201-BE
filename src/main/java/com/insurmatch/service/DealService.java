@@ -32,6 +32,7 @@ public class DealService {
     private final ActivityRepository activityRepository;
     private final NoteRepository noteRepository;
     private final TaskRepository taskRepository;
+    private final ContactService contactService;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy, HH:mm");
     private static final Random RANDOM = new Random();
@@ -82,16 +83,50 @@ public class DealService {
                 .orElseThrow(() -> new ResourceNotFoundException("Deal not found with id: " + id));
     }
 
-    public DealResponse getDealResponseById(Long id) {
-        Deal deal = getDealById(id);
+    public Deal getDealByIdOrCode(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            throw new ResourceNotFoundException("Deal identifier cannot be empty");
+        }
+        java.util.Optional<Deal> byCode = dealRepository.findByCode(identifier);
+        if (byCode.isPresent()) {
+            Deal d = byCode.get();
+            validateAgentAccess(d);
+            return d;
+        }
+        try {
+            Long id = Long.parseLong(identifier);
+            return getDealById(id);
+        } catch (NumberFormatException ignored) {}
 
-        // RBAC: Agent can only view their own deal
+        String digits = identifier.replaceAll("^[^0-9]+", "");
+        if (digits.startsWith("2600") && digits.length() > 4) {
+            digits = digits.substring(4);
+        }
+        try {
+            long num = Long.parseLong(digits);
+            if (num > 5000) {
+                try {
+                    return getDealById(num - 5000);
+                } catch (Exception ignored) {}
+            }
+            return getDealById(num);
+        } catch (NumberFormatException | ResourceNotFoundException ex) {
+            throw new ResourceNotFoundException("Deal not found with identifier: " + identifier);
+        }
+    }
+
+    private void validateAgentAccess(Deal deal) {
         User currentUser = getCurrentAuthenticatedUser();
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
             if (deal.getDealOwner() == null || !deal.getDealOwner().getId().equals(currentUser.getId())) {
                 throw new org.springframework.security.access.AccessDeniedException("Bạn chỉ có quyền xem hợp đồng do mình phụ trách!");
             }
         }
+    }
+
+    public DealResponse getDealResponseById(Long id) {
+        Deal deal = getDealById(id);
+        validateAgentAccess(deal);
 
         List<Activity> activities = activityRepository.findByDealIdOrderByCreatedAtDesc(id);
         List<Note> notes = noteRepository.findByDealIdOrderByCreatedAtDesc(id);
@@ -100,12 +135,19 @@ public class DealService {
         return DealResponse.fromEntity(deal, activities, notes, tasks, tickets);
     }
 
+    public DealResponse getDealResponseById(String identifier) {
+        Deal deal = getDealByIdOrCode(identifier);
+        return getDealResponseById(deal.getId());
+    }
+
     @Transactional
     public DealResponse createDeal(CreateDealRequest req) {
         // 1. Resolve Contact
         Contact contact = null;
-        if (req.getContactId() != null) {
-            contact = contactRepository.findById(req.getContactId()).orElse(null);
+        if (req.getContactId() != null && !req.getContactId().isBlank()) {
+            try {
+                contact = contactService.getContactByIdOrCode(req.getContactId());
+            } catch (Exception ignored) {}
         }
         if (contact == null && req.getContactName() != null && !req.getContactName().isBlank()) {
             List<Contact> foundContacts = contactRepository.searchContacts(req.getContactName());
@@ -315,6 +357,10 @@ public class DealService {
         return getDealResponseById(updated.getId());
     }
 
+    public DealResponse updateDeal(String identifier, CreateDealRequest req) {
+        return updateDeal(getDealByIdOrCode(identifier).getId(), req);
+    }
+
     @Transactional
     public DealResponse updateStage(Long id, UpdateStageRequest req) {
         Deal deal = getDealById(id);
@@ -353,6 +399,10 @@ public class DealService {
         return getDealResponseById(deal.getId());
     }
 
+    public DealResponse updateStage(String identifier, UpdateStageRequest req) {
+        return updateStage(getDealByIdOrCode(identifier).getId(), req);
+    }
+
     @Transactional
     public Note addNote(Long dealId, Note note) {
         Deal deal = getDealById(dealId);
@@ -367,6 +417,10 @@ public class DealService {
             note.setContact(deal.getContact());
         }
         return noteRepository.save(note);
+    }
+
+    public Note addNote(String identifier, Note note) {
+        return addNote(getDealByIdOrCode(identifier).getId(), note);
     }
 
     @Transactional
@@ -385,8 +439,16 @@ public class DealService {
         return taskRepository.save(task);
     }
 
+    public Task addTask(String identifier, Task task) {
+        return addTask(getDealByIdOrCode(identifier).getId(), task);
+    }
+
     public List<Activity> getActivities(Long dealId) {
         return activityRepository.findByDealIdOrderByCreatedAtDesc(dealId);
+    }
+
+    public List<Activity> getActivities(String identifier) {
+        return getActivities(getDealByIdOrCode(identifier).getId());
     }
 
     public long count() {

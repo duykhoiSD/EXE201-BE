@@ -30,6 +30,9 @@ public class CustomerDocument {
     @Builder.Default
     private String initials = "ND";
 
+    @Column(name = "code", length = 50)
+    private String code;
+
     @Column(name = "contact_owner", length = 150)
     private String contactOwner;
 
@@ -52,6 +55,12 @@ public class CustomerDocument {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("code")
+    public String getCode() {
+        if (code != null && !code.isBlank()) return code;
+        return id != null ? "DOC-" + id : null;
+    }
 
     @com.fasterxml.jackson.annotation.JsonProperty("contactName")
     @Transient

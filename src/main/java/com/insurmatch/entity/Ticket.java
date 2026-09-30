@@ -69,6 +69,9 @@ public class Ticket {
     @JoinColumn(name = "service_agent_id")
     private User serviceAgent; // = Support chính
 
+    @Column(name = "code", length = 50)
+    private String code;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -76,4 +79,55 @@ public class Ticket {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    public String getCode() {
+        if (code != null && !code.isBlank()) return code;
+        return "TK2600" + (id != null ? (1000 + id) : "1000");
+    }
+
+    @Transient
+    public String getTitle() {
+        return ticketName;
+    }
+
+    @Transient
+    public String getStatus() {
+        return ticketStatus;
+    }
+
+    @Transient
+    public String getDescription() {
+        return ticketDescription;
+    }
+
+    @Transient
+    public String getContactName() {
+        return contact != null ? contact.getFullName() : null;
+    }
+
+    @Transient
+    public Long getContactId() {
+        return contact != null ? contact.getId() : null;
+    }
+
+    @Transient
+    public String getDealTitle() {
+        return deal != null ? deal.getDealName() : null;
+    }
+
+    @Transient
+    public Long getDealId() {
+        return deal != null ? deal.getId() : null;
+    }
+
+    @Transient
+    public String getTicketOwnerName() {
+        return ticketOwner != null ? ticketOwner.getFullName() : null;
+    }
+
+    @Transient
+    public String getServiceAgentName() {
+        return serviceAgent != null ? serviceAgent.getFullName() : null;
+    }
 }

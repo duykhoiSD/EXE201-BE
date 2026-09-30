@@ -91,9 +91,10 @@ public class ContactController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ContactDTO>> updateContact(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody ContactDTO contactDTO) {
-        Contact updated = contactService.updateContactFromDTO(id, contactDTO);
+        Contact contact = contactService.getContactByIdOrCode(id);
+        Contact updated = contactService.updateContactFromDTO(contact.getId(), contactDTO);
         ContactDTO dto = contactService.toDTO(updated);
         return ResponseEntity.ok(ApiResponse.success("Contact updated", dto));
     }
@@ -101,23 +102,34 @@ public class ContactController {
     // ===================== DELETE =====================
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteContact(@PathVariable Long id) {
-        contactService.deleteContact(id);
+    public ResponseEntity<ApiResponse<Void>> deleteContact(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        contactService.deleteContact(contact.getId());
         return ResponseEntity.ok(ApiResponse.success("Contact deleted", null));
     }
 
     // ===================== SUB-RESOURCES: NOTES =====================
 
     @GetMapping("/{id}/notes")
-    public ResponseEntity<ApiResponse<List<Note>>> getContactNotes(@PathVariable Long id) {
-        List<Note> notes = contactService.getNotesByContactId(id);
+    public ResponseEntity<ApiResponse<List<Note>>> getContactNotes(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        List<Note> notes = contactService.getNotesByContactId(contact.getId());
         return ResponseEntity.ok(ApiResponse.success(notes));
     }
 
     @PostMapping("/{id}/notes")
-    public ResponseEntity<ApiResponse<Note>> addNote(@PathVariable Long id, @RequestBody Note note) {
-        Contact contact = contactService.getContactById(id);
+    public ResponseEntity<ApiResponse<Note>> addNote(@PathVariable String id, @RequestBody Note note) {
+        Contact contact = contactService.getContactByIdOrCode(id);
         note.setContact(contact);
+        if (note.getText() == null || note.getText().isBlank()) {
+            if (note.getBody() != null && !note.getBody().isBlank()) {
+                note.setText(note.getBody());
+            } else if (note.getTitle() != null && !note.getTitle().isBlank()) {
+                note.setText(note.getTitle());
+            } else {
+                note.setText("Note content");
+            }
+        }
         Note saved = noteRepository.save(note);
         return ResponseEntity.ok(ApiResponse.success("Note added", saved));
     }
@@ -125,14 +137,15 @@ public class ContactController {
     // ===================== SUB-RESOURCES: TASKS =====================
 
     @GetMapping("/{id}/tasks")
-    public ResponseEntity<ApiResponse<List<Task>>> getContactTasks(@PathVariable Long id) {
-        List<Task> tasks = contactService.getTasksByContactId(id);
+    public ResponseEntity<ApiResponse<List<Task>>> getContactTasks(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        List<Task> tasks = contactService.getTasksByContactId(contact.getId());
         return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 
     @PostMapping("/{id}/tasks")
-    public ResponseEntity<ApiResponse<Task>> addTask(@PathVariable Long id, @RequestBody Task task) {
-        Contact contact = contactService.getContactById(id);
+    public ResponseEntity<ApiResponse<Task>> addTask(@PathVariable String id, @RequestBody Task task) {
+        Contact contact = contactService.getContactByIdOrCode(id);
         task.setContact(contact);
         if (task.getDueDate() == null) {
             task.setDueDate(java.time.LocalDate.now().plusDays(3));
@@ -144,15 +157,23 @@ public class ContactController {
     // ===================== SUB-RESOURCES: ACTIVITIES =====================
 
     @GetMapping("/{id}/activities")
-    public ResponseEntity<ApiResponse<List<Activity>>> getContactActivities(@PathVariable Long id) {
-        List<Activity> activities = contactService.getActivitiesByContactId(id);
+    public ResponseEntity<ApiResponse<List<Activity>>> getContactActivities(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        List<Activity> activities = contactService.getActivitiesByContactId(contact.getId());
         return ResponseEntity.ok(ApiResponse.success(activities));
     }
 
     @PostMapping("/{id}/activities")
-    public ResponseEntity<ApiResponse<Activity>> addActivity(@PathVariable Long id, @RequestBody Activity activity) {
-        Contact contact = contactService.getContactById(id);
+    public ResponseEntity<ApiResponse<Activity>> addActivity(@PathVariable String id, @RequestBody Activity activity) {
+        Contact contact = contactService.getContactByIdOrCode(id);
         activity.setContact(contact);
+        if (activity.getSummary() == null || activity.getSummary().isBlank()) {
+            if (activity.getDescription() != null && !activity.getDescription().isBlank()) {
+                activity.setSummary(activity.getDescription());
+            } else {
+                activity.setSummary("Activity logged");
+            }
+        }
         Activity saved = activityRepository.save(activity);
         return ResponseEntity.ok(ApiResponse.success("Activity added", saved));
     }
@@ -160,24 +181,27 @@ public class ContactController {
     // ===================== SUB-RESOURCES: DEALS =====================
 
     @GetMapping("/{id}/deals")
-    public ResponseEntity<ApiResponse<List<Deal>>> getContactDeals(@PathVariable Long id) {
-        List<Deal> deals = contactService.getDealsByContactId(id);
+    public ResponseEntity<ApiResponse<List<Deal>>> getContactDeals(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        List<Deal> deals = contactService.getDealsByContactId(contact.getId());
         return ResponseEntity.ok(ApiResponse.success(deals));
     }
 
     // ===================== SUB-RESOURCES: TICKETS =====================
 
     @GetMapping("/{id}/tickets")
-    public ResponseEntity<ApiResponse<List<Ticket>>> getContactTickets(@PathVariable Long id) {
-        List<Ticket> tickets = contactService.getTicketsByContactId(id);
+    public ResponseEntity<ApiResponse<List<Ticket>>> getContactTickets(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        List<Ticket> tickets = contactService.getTicketsByContactId(contact.getId());
         return ResponseEntity.ok(ApiResponse.success(tickets));
     }
 
     // ===================== SUB-RESOURCES: DOCUMENTS =====================
 
     @GetMapping("/{id}/documents")
-    public ResponseEntity<ApiResponse<List<CustomerDocument>>> getContactDocuments(@PathVariable Long id) {
-        List<CustomerDocument> documents = contactService.getDocumentsByContactId(id);
+    public ResponseEntity<ApiResponse<List<CustomerDocument>>> getContactDocuments(@PathVariable String id) {
+        Contact contact = contactService.getContactByIdOrCode(id);
+        List<CustomerDocument> documents = contactService.getDocumentsByContactId(contact.getId());
         return ResponseEntity.ok(ApiResponse.success(documents));
     }
 }

@@ -20,8 +20,19 @@ public class Note {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 255)
+    private String title;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String text;
+
+    public void setBody(String body) {
+        this.text = body;
+    }
+
+    public String getBody() {
+        return this.text;
+    }
 
     @Column(length = 150)
     @Builder.Default

@@ -102,6 +102,19 @@ public class SeedController {
 
         // ── Seed Contacts ────────────────────────────────────────────────────
         Contact c1 = contactRepository.save(Contact.builder()
+                .code("CT26002600")
+                .firstName("Nhat Huu Tuan").lastName("Dang")
+                .email("tuannhat.n2@gmail.com").phone("714-837-2395")
+                .dateOfBirth(LocalDate.of(1985, 3, 15))
+                .gender("Male").immigrationStatus("Permanent Resident")
+                .address("1234 Bellaire Blvd").city("Houston").state("TX").zipCode("77072")
+                .householdSize(4).estimatedIncome(45000.0)
+                .sourceChannel("Referral").sourceDetail("The Best Rate Insurance")
+                .contactOwner(manager).supportAgent(staff)
+                .build());
+
+        Contact c2 = contactRepository.save(Contact.builder()
+                .code("CT26002601")
                 .firstName("Minh").lastName("Tran")
                 .email("minhtran@gmail.com").phone("832-123-4567")
                 .dateOfBirth(LocalDate.of(1985, 3, 15))
@@ -112,7 +125,8 @@ public class SeedController {
                 .contactOwner(manager).supportAgent(staff)
                 .build());
 
-        Contact c2 = contactRepository.save(Contact.builder()
+        Contact c3 = contactRepository.save(Contact.builder()
+                .code("CT26002602")
                 .firstName("Lan").lastName("Nguyen")
                 .email("lannguyen@gmail.com").phone("714-987-6543")
                 .dateOfBirth(LocalDate.of(1960, 7, 22))
@@ -181,16 +195,17 @@ public class SeedController {
                 .enrolledNpn("20011862")
                 .brokerEffectiveDate(LocalDate.of(2026, 1, 1))
                 .saleSupportStatus("Partial")
-                .contact(c2)
+                .contact(c3)
                 .dealOwner(manager)
                 .supportAgent(staff)
                 .build());
 
         // ── Seed Tickets ─────────────────────────────────────────────────────
         ticketRepository.save(Ticket.builder()
-                .ticketName("Make September Payment — Minh Tran")
-                .pipeline("PAYMENT")
-                .ticketStatus("CHECK_PAYMENT")
+                .code("TC26001001")
+                .ticketName("Upload documents - Nhat Huu Tuan Dang")
+                .pipeline("Upload document")
+                .ticketStatus("Waiting on verification")
                 .ticketDescription("Monthly payment for September 2026")
                 .priority("HIGH")
                 .dueDate(LocalDate.of(2026, 9, 30))
@@ -198,17 +213,19 @@ public class SeedController {
                 .build());
 
         ticketRepository.save(Ticket.builder()
-                .ticketName("Upload Consent Form — Lan Nguyen")
-                .pipeline("COLLECT_DOCUMENT")
-                .ticketStatus("CONTACT_CLIENT_FOR_UPLOAD")
+                .code("TC26001002")
+                .ticketName("ACA account 2026")
+                .pipeline("ACA account")
+                .ticketStatus("DONE")
                 .ticketDescription("Collect consent form within 30 days of enrollment")
                 .priority("MEDIUM")
                 .dueDate(LocalDate.of(2026, 10, 15))
-                .contact(c2).deal(d2).ticketOwner(agent).serviceAgent(staff)
+                .contact(c3).deal(d2).ticketOwner(agent).serviceAgent(staff)
                 .build());
 
         // ── Seed Tasks ───────────────────────────────────────────────────────
         taskRepository.save(Task.builder()
+                .code("TSK26001001")
                 .title("Follow up 1st Payment — Minh Tran")
                 .description("Confirm first payment cleared for Ambetter plan")
                 .priority("HIGH").status("IN_PROGRESS")
@@ -217,11 +234,12 @@ public class SeedController {
                 .build());
 
         taskRepository.save(Task.builder()
+                .code("TSK26001002")
                 .title("Send PCP list — Lan Nguyen")
                 .description("Find Vietnamese-speaking PCP near Westminster CA")
                 .priority("MEDIUM").status("OPEN")
                 .dueDate(LocalDate.now().plusDays(3))
-                .contact(c2).deal(d2).assignedTo(staff).createdBy(manager)
+                .contact(c3).deal(d2).assignedTo(staff).createdBy(manager)
                 .build());
 
         // ── Seed QuoteRequests ───────────────────────────────────────────────
@@ -259,7 +277,7 @@ public class SeedController {
                 .time("09/01/2026, 09:00")
                 .summary("Created deal: " + d2.getDealName())
                 .dealTitle(d2.getDealName())
-                .contact(c2).deal(d2).build());
+                .contact(c3).deal(d2).build());
 
         // ── Seed Commissions ─────────────────────────────────────────────────
         commissionRepository.save(Commission.builder()
@@ -273,10 +291,11 @@ public class SeedController {
 
         // ── Seed Customer Documents & Files ───────────────────────────────────
         CustomerDocument doc1 = documentRepository.save(CustomerDocument.builder()
-                .name("Minh Tran")
-                .initials("MT")
-                .contactOwner("Manager User (manager@insurmatch.us)")
-                .lastModifiedBy("Manager User")
+                .code("DOC-01")
+                .name("Hai Nguyen")
+                .initials("HN")
+                .contactOwner("Khanh Nguyen (khanhnguyen31@7)")
+                .lastModifiedBy("Khanh Nguyen")
                 .contact(c1)
                 .build());
 
@@ -308,11 +327,12 @@ public class SeedController {
                 .build());
 
         CustomerDocument doc2 = documentRepository.save(CustomerDocument.builder()
+                .code("DOC-02")
                 .name("Lan Nguyen")
                 .initials("LN")
                 .contactOwner("Licensed Agent (agent@insurmatch.us)")
                 .lastModifiedBy("Licensed Agent")
-                .contact(c2)
+                .contact(c3)
                 .build());
 
         fileRepository.save(DocumentFile.builder()

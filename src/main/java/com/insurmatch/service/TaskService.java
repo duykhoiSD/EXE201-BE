@@ -32,7 +32,7 @@ public class TaskService {
         return null;
     }
 
-    public List<Task> getAllTasks(String status, String priority, Long assignedTo, Long contactId, Long dealId, Long ticketId) {
+    public List<Task> getAllTasks(String status, String priority, Long assignedTo, Long contactId, Long dealId, Long ticketId, String search) {
         User currentUser = getCurrentAuthenticatedUser();
 
         List<Task> tasks;
@@ -45,19 +45,68 @@ public class TaskService {
         }
 
         return tasks.stream()
-                .filter(t -> status == null || status.isBlank() || status.equalsIgnoreCase(t.getStatus()))
-                .filter(t -> priority == null || priority.isBlank() || priority.equalsIgnoreCase(t.getPriority()))
+                .filter(t -> status == null || status.isBlank() || status.equalsIgnoreCase("all") || status.equalsIgnoreCase(t.getStatus()))
+                .filter(t -> priority == null || priority.isBlank() || priority.equalsIgnoreCase("all") || priority.equalsIgnoreCase("none") || priority.equalsIgnoreCase(t.getPriority()))
                 .filter(t -> assignedTo == null || (t.getAssignedTo() != null && t.getAssignedTo().getId().equals(assignedTo)))
                 .filter(t -> contactId == null || (t.getContact() != null && t.getContact().getId().equals(contactId)))
                 .filter(t -> dealId == null || (t.getDeal() != null && t.getDeal().getId().equals(dealId)))
                 .filter(t -> ticketId == null || (t.getTicket() != null && t.getTicket().getId().equals(ticketId)))
+                .filter(t -> {
+                    if (search == null || search.isBlank()) return true;
+                    String q = search.toLowerCase().trim();
+                    return (t.getTitle() != null && t.getTitle().toLowerCase().contains(q))
+                            || (t.getCode() != null && t.getCode().toLowerCase().contains(q))
+                            || (t.getDescription() != null && t.getDescription().toLowerCase().contains(q))
+                            || (t.getContact() != null && t.getContact().getFullName() != null && t.getContact().getFullName().toLowerCase().contains(q));
+                })
                 .toList();
+    }
+
+    public List<Task> getAllTasks(String status, String priority, Long assignedTo, Long contactId, Long dealId, Long ticketId) {
+        return getAllTasks(status, priority, assignedTo, contactId, dealId, ticketId, null);
     }
 
     public Task getTaskById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
+        validateAgentAccess(task);
+        return task;
+    }
+
+    public Task getTaskByIdOrCode(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            throw new ResourceNotFoundException("Task identifier cannot be empty");
+        }
+        java.util.Optional<Task> byCode = taskRepository.findByCode(identifier);
+        if (byCode.isPresent()) {
+            Task t = byCode.get();
+            validateAgentAccess(t);
+            return t;
+        }
+        try {
+            Long id = Long.parseLong(identifier);
+            return getTaskById(id);
+        } catch (NumberFormatException ignored) {}
+
+        String digits = identifier.replaceAll("^[^0-9]+", "");
+        if (digits.startsWith("2600") && digits.length() > 4) {
+            digits = digits.substring(4);
+        }
+        try {
+            long num = Long.parseLong(digits);
+            if (num > 1000) {
+                try {
+                    return getTaskById(num - 1000);
+                } catch (Exception ignored) {}
+            }
+            return getTaskById(num);
+        } catch (NumberFormatException | ResourceNotFoundException ex) {
+            throw new ResourceNotFoundException("Task not found with identifier: " + identifier);
+        }
+    }
+
+    private void validateAgentAccess(Task task) {
         User currentUser = getCurrentAuthenticatedUser();
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
             boolean isOwner = (task.getAssignedTo() != null && task.getAssignedTo().getId().equals(currentUser.getId()))
@@ -66,7 +115,6 @@ public class TaskService {
                 throw new AccessDeniedException("Bạn chỉ có quyền xem công việc do mình phụ trách!");
             }
         }
-        return task;
     }
 
     public Task createTask(Task task) {
@@ -158,6 +206,10 @@ public class TaskService {
         return taskRepository.save(existing);
     }
 
+    public Task updateTask(String identifier, Task taskData) {
+        return updateTask(getTaskByIdOrCode(identifier).getId(), taskData);
+    }
+
     public void deleteTask(Long id) {
         Task task = getTaskById(id);
         User currentUser = getCurrentAuthenticatedUser();
@@ -169,6 +221,10 @@ public class TaskService {
             }
         }
         taskRepository.delete(task);
+    }
+
+    public void deleteTask(String identifier) {
+        deleteTask(getTaskByIdOrCode(identifier).getId());
     }
 
     public long count() {

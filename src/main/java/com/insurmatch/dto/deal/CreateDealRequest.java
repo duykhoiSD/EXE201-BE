@@ -22,7 +22,7 @@ public class CreateDealRequest {
     private String member;
     private String primaryMemberId;
     private String contactName;
-    private Long contactId;
+    private String contactId;
     private String dealOwner;
     private Long dealOwnerId;
     private String needUpload; // "Yes" | "No"

@@ -32,7 +32,7 @@ public class TicketService {
         return null;
     }
 
-    public List<Ticket> getAllTickets(String pipeline, String status, String priority, Long contactId, Long dealId) {
+    public List<Ticket> getAllTickets(String pipeline, String status, String priority, Long contactId, Long dealId, String search, String owner) {
         User currentUser = getCurrentAuthenticatedUser();
 
         List<Ticket> tickets;
@@ -45,18 +45,73 @@ public class TicketService {
         }
 
         return tickets.stream()
-                .filter(t -> pipeline == null || pipeline.isBlank() || pipeline.equalsIgnoreCase(t.getPipeline()))
-                .filter(t -> status == null || status.isBlank() || status.equalsIgnoreCase(t.getTicketStatus()))
-                .filter(t -> priority == null || priority.isBlank() || priority.equalsIgnoreCase(t.getPriority()))
+                .filter(t -> pipeline == null || pipeline.isBlank() || pipeline.equalsIgnoreCase("all") || pipeline.equalsIgnoreCase(t.getPipeline()))
+                .filter(t -> status == null || status.isBlank() || status.equalsIgnoreCase("all") || status.equalsIgnoreCase(t.getTicketStatus()))
+                .filter(t -> priority == null || priority.isBlank() || priority.equalsIgnoreCase("all") || priority.equalsIgnoreCase(t.getPriority()))
                 .filter(t -> contactId == null || (t.getContact() != null && t.getContact().getId().equals(contactId)))
                 .filter(t -> dealId == null || (t.getDeal() != null && t.getDeal().getId().equals(dealId)))
+                .filter(t -> {
+                    if (search == null || search.isBlank()) return true;
+                    String q = search.toLowerCase().trim();
+                    return (t.getTicketName() != null && t.getTicketName().toLowerCase().contains(q))
+                            || (t.getCode() != null && t.getCode().toLowerCase().contains(q))
+                            || (t.getTicketDescription() != null && t.getTicketDescription().toLowerCase().contains(q))
+                            || (t.getContact() != null && t.getContact().getFullName() != null && t.getContact().getFullName().toLowerCase().contains(q));
+                })
+                .filter(t -> {
+                    if (owner == null || owner.isBlank() || owner.equalsIgnoreCase("all")) return true;
+                    String o = owner.toLowerCase().trim();
+                    return (t.getTicketOwner() != null && t.getTicketOwner().getFullName() != null && t.getTicketOwner().getFullName().toLowerCase().contains(o))
+                            || (t.getServiceAgent() != null && t.getServiceAgent().getFullName() != null && t.getServiceAgent().getFullName().toLowerCase().contains(o));
+                })
                 .toList();
+    }
+
+    public List<Ticket> getAllTickets(String pipeline, String status, String priority, Long contactId, Long dealId) {
+        return getAllTickets(pipeline, status, priority, contactId, dealId, null, null);
     }
 
     public Ticket getTicketById(Long id) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with id: " + id));
 
+        validateAgentAccess(ticket);
+        return ticket;
+    }
+
+    public Ticket getTicketByIdOrCode(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            throw new ResourceNotFoundException("Ticket identifier cannot be empty");
+        }
+        java.util.Optional<Ticket> byCode = ticketRepository.findByCode(identifier);
+        if (byCode.isPresent()) {
+            Ticket t = byCode.get();
+            validateAgentAccess(t);
+            return t;
+        }
+        try {
+            Long id = Long.parseLong(identifier);
+            return getTicketById(id);
+        } catch (NumberFormatException ignored) {}
+
+        String digits = identifier.replaceAll("^[^0-9]+", "");
+        if (digits.startsWith("2600") && digits.length() > 4) {
+            digits = digits.substring(4);
+        }
+        try {
+            long num = Long.parseLong(digits);
+            if (num > 1000) {
+                try {
+                    return getTicketById(num - 1000);
+                } catch (Exception ignored) {}
+            }
+            return getTicketById(num);
+        } catch (NumberFormatException | ResourceNotFoundException ex) {
+            throw new ResourceNotFoundException("Ticket not found with identifier: " + identifier);
+        }
+    }
+
+    private void validateAgentAccess(Ticket ticket) {
         User currentUser = getCurrentAuthenticatedUser();
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
             boolean isOwner = (ticket.getTicketOwner() != null && ticket.getTicketOwner().getId().equals(currentUser.getId()))
@@ -65,7 +120,6 @@ public class TicketService {
                 throw new AccessDeniedException("Bạn chỉ có quyền xem ticket do mình phụ trách!");
             }
         }
-        return ticket;
     }
 
     public Ticket createTicket(Ticket ticket) {
@@ -159,6 +213,10 @@ public class TicketService {
         return ticketRepository.save(existing);
     }
 
+    public Ticket updateTicket(String identifier, Ticket ticketData) {
+        return updateTicket(getTicketByIdOrCode(identifier).getId(), ticketData);
+    }
+
     public TicketComment addComment(Long ticketId, TicketComment comment) {
         Ticket ticket = getTicketById(ticketId);
         comment.setTicket(ticket);
@@ -170,8 +228,16 @@ public class TicketService {
         return ticketCommentRepository.save(comment);
     }
 
+    public TicketComment addComment(String identifier, TicketComment comment) {
+        return addComment(getTicketByIdOrCode(identifier).getId(), comment);
+    }
+
     public List<TicketComment> getComments(Long ticketId) {
         return ticketCommentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId);
+    }
+
+    public List<TicketComment> getComments(String identifier) {
+        return getComments(getTicketByIdOrCode(identifier).getId());
     }
 
     public void deleteTicket(Long id) {
@@ -181,6 +247,10 @@ public class TicketService {
             throw new AccessDeniedException("Đại lý không có quyền xóa Ticket!");
         }
         ticketRepository.delete(existing);
+    }
+
+    public void deleteTicket(String identifier) {
+        deleteTicket(getTicketByIdOrCode(identifier).getId());
     }
 
     public long count() {

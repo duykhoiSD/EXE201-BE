@@ -45,7 +45,7 @@ public class DealController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DealResponse>> getDeal(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<DealResponse>> getDeal(@PathVariable String id) {
         DealResponse deal = dealService.getDealResponseById(id);
         return ResponseEntity.ok(ApiResponse.success(deal));
     }
@@ -59,7 +59,7 @@ public class DealController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<DealResponse>> updateDeal(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody CreateDealRequest req) {
         DealResponse updated = dealService.updateDeal(id, req);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật hợp đồng thành công!", updated));
@@ -67,7 +67,7 @@ public class DealController {
 
     @PutMapping("/{id}/stage")
     public ResponseEntity<ApiResponse<DealResponse>> updateDealStage(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody UpdateStageRequest req) {
         DealResponse updated = dealService.updateStage(id, req);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công!", updated));
@@ -75,7 +75,7 @@ public class DealController {
 
     @PostMapping("/{id}/notes")
     public ResponseEntity<ApiResponse<Note>> addNote(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody Note note) {
         Note saved = dealService.addNote(id, note);
         return ResponseEntity.ok(ApiResponse.success("Đã thêm ghi chú cho hợp đồng!", saved));
@@ -83,14 +83,14 @@ public class DealController {
 
     @PostMapping("/{id}/tasks")
     public ResponseEntity<ApiResponse<Task>> addTask(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody Task task) {
         Task saved = dealService.addTask(id, task);
         return ResponseEntity.ok(ApiResponse.success("Đã tạo nhiệm vụ cho hợp đồng!", saved));
     }
 
     @GetMapping("/{id}/activities")
-    public ResponseEntity<ApiResponse<List<Activity>>> getDealActivities(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<Activity>>> getDealActivities(@PathVariable String id) {
         List<Activity> activities = dealService.getActivities(id);
         return ResponseEntity.ok(ApiResponse.success(activities));
     }

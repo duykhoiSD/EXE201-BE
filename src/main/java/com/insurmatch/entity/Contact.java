@@ -26,6 +26,9 @@ public class Contact {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "code", length = 50)
+    private String code;
+
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 
@@ -155,8 +158,8 @@ public class Contact {
         return sb.length() > 0 ? sb.toString() : (email != null ? email : "Contact #" + id);
     }
 
-    @Transient
     public String getCode() {
+        if (code != null && !code.isBlank()) return code;
         return "CT2600" + (id != null ? (2000 + id) : "0000");
     }
 }

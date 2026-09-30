@@ -30,14 +30,15 @@ public class TaskController {
             @RequestParam(required = false) Long assignedTo,
             @RequestParam(required = false) Long contactId,
             @RequestParam(required = false) Long dealId,
-            @RequestParam(required = false) Long ticketId) {
-        List<Task> tasks = taskService.getAllTasks(status, priority, assignedTo, contactId, dealId, ticketId);
+            @RequestParam(required = false) Long ticketId,
+            @RequestParam(required = false) String search) {
+        List<Task> tasks = taskService.getAllTasks(status, priority, assignedTo, contactId, dealId, ticketId, search);
         return ResponseEntity.ok(ApiResponse.success(tasks));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Task>> getTask(@PathVariable Long id) {
-        Task task = taskService.getTaskById(id);
+    public ResponseEntity<ApiResponse<Task>> getTask(@PathVariable String id) {
+        Task task = taskService.getTaskByIdOrCode(id);
         return ResponseEntity.ok(ApiResponse.success(task));
     }
 
@@ -48,13 +49,13 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Task>> updateTask(@PathVariable Long id, @RequestBody Task taskData) {
+    public ResponseEntity<ApiResponse<Task>> updateTask(@PathVariable String id, @RequestBody Task taskData) {
         Task updated = taskService.updateTask(id, taskData);
         return ResponseEntity.ok(ApiResponse.success("Task updated", updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable String id) {
         taskService.deleteTask(id);
         return ResponseEntity.ok(ApiResponse.success("Task deleted", null));
     }

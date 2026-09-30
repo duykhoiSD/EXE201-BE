@@ -33,6 +33,14 @@ public class Activity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String summary;
 
+    public void setDescription(String description) {
+        this.summary = description;
+    }
+
+    public String getDescription() {
+        return this.summary;
+    }
+
     @Column(name = "ticket_title", length = 255)
     @Builder.Default
     private String ticketTitle = "";

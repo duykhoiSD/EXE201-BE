@@ -100,20 +100,43 @@ public class ContactService {
         if (identifier == null || identifier.isBlank()) {
             throw new ResourceNotFoundException("Contact identifier cannot be empty");
         }
+        // 1. Check exact code column
+        java.util.Optional<Contact> byCode = contactRepository.findByCode(identifier);
+        if (byCode.isPresent()) {
+            Contact c = byCode.get();
+            validateAgentAccess(c);
+            return c;
+        }
+
+        // 2. Direct numeric ID
         try {
             Long id = Long.parseLong(identifier);
             return getContactById(id);
-        } catch (NumberFormatException e) {
-            // Bỏ prefix không phải số (ví dụ CT26000001 -> 26000001 hoặc 1)
-            String digits = identifier.replaceAll("^[^0-9]+", "");
-            if (digits.startsWith("2600") && digits.length() > 4) {
-                digits = digits.substring(4); // Lấy số thứ tự sau 2600
+        } catch (NumberFormatException ignored) {}
+
+        // 3. Fallback: Parse digits (e.g. CT26002001 -> 2001 -> 1)
+        String digits = identifier.replaceAll("^[^0-9]+", "");
+        if (digits.startsWith("2600") && digits.length() > 4) {
+            digits = digits.substring(4);
+        }
+        try {
+            long num = Long.parseLong(digits);
+            if (num > 2000) {
+                try {
+                    return getContactById(num - 2000);
+                } catch (Exception ignored) {}
             }
-            try {
-                Long id = Long.parseLong(digits);
-                return getContactById(id);
-            } catch (NumberFormatException | ResourceNotFoundException ex) {
-                throw new ResourceNotFoundException("Contact not found with identifier: " + identifier);
+            return getContactById(num);
+        } catch (NumberFormatException | ResourceNotFoundException ex) {
+            throw new ResourceNotFoundException("Contact not found with identifier: " + identifier);
+        }
+    }
+
+    private void validateAgentAccess(Contact contact) {
+        User currentUser = getCurrentAuthenticatedUser();
+        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
+            if (contact.getContactOwner() == null || !contact.getContactOwner().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Bạn chỉ có quyền xem hồ sơ khách hàng do mình phụ trách!");
             }
         }
     }
@@ -302,7 +325,7 @@ public class ContactService {
                 .collect(Collectors.joining(" "));
         if (fullName.isEmpty()) fullName = "Unknown Contact";
 
-        String code = "CT2600" + String.format("%04d", c.getId() != null ? c.getId() : 1);
+        String code = c.getCode();
 
         ContactDTO.UserSummary ownerSummary = null;
         if (c.getContactOwner() != null) {
@@ -376,6 +399,7 @@ public class ContactService {
     }
 
     private void applyDTOToEntity(ContactDTO dto, Contact entity) {
+        if (dto.getCode() != null && !dto.getCode().isBlank()) entity.setCode(dto.getCode());
         if (dto.getFirstName() != null) entity.setFirstName(dto.getFirstName());
         if (dto.getMiddleName() != null) entity.setMiddleName(dto.getMiddleName());
         if (dto.getLastName() != null) entity.setLastName(dto.getLastName());
