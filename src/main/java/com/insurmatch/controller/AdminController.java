@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.security.SecureRandom;
 import java.util.Collection;
@@ -45,6 +46,7 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
     private final EmailService emailService;
     private final QuoteRequestService quoteRequestService;
     private final ContactService contactService;
@@ -66,6 +68,16 @@ public class AdminController {
         stats.put("newQuotes", quoteRequestService.countByStatus("NEW"));
         stats.put("assignedQuotes", quoteRequestService.countByStatus("ASSIGNED"));
         return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    @GetMapping("/drop-constraint")
+    public ResponseEntity<?> dropConstraint() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;");
+            return ResponseEntity.ok("Dropped successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed: " + e.getMessage());
+        }
     }
 
     // ── Account Management ───────────────────────────────────────────────────
