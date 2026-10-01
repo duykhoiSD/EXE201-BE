@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -39,9 +40,16 @@ public class SeedController {
     private final CustomerDocumentRepository documentRepository;
     private final DocumentFileRepository fileRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
 
     @PostMapping("/seed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> seedDatabase() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;");
+        } catch (Exception e) {
+            // Ignore if constraint doesn't exist or table doesn't exist
+        }
+
         // Clear all data in correct order (respect FK constraints)
         fileRepository.deleteAll();
         documentRepository.deleteAll();
