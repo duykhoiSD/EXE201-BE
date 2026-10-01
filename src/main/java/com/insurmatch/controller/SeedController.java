@@ -47,7 +47,7 @@ public class SeedController {
         try {
             jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;");
         } catch (Exception e) {
-            // Ignore if constraint doesn't exist or table doesn't exist
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to drop constraint: " + e.getMessage()));
         }
 
         // Clear all data in correct order (respect FK constraints)
@@ -83,7 +83,7 @@ public class SeedController {
                 .department("Operations Hub")
                 .status("Active")
                 .complianceStatus("Verified & Cleared")
-                .role(User.Role.STAFF).active(true).emailVerified(true).build());
+                .role(User.Role.ADMIN).active(true).emailVerified(true).build());
 
         User agent = userRepository.save(User.builder()
                 .email("agent@insurmatch.us")
@@ -106,7 +106,7 @@ public class SeedController {
                 .department("Regional Management")
                 .status("Active")
                 .complianceStatus("Verified & Cleared")
-                .role(User.Role.MANAGER).active(true).emailVerified(true).build());
+                .role(User.Role.AGENT).active(true).emailVerified(true).build());
 
         // ── Seed Contacts ────────────────────────────────────────────────────
         Contact c1 = contactRepository.save(Contact.builder()
