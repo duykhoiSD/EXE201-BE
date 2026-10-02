@@ -35,6 +35,12 @@ services:
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
         value: "http://localhost:5173,http://localhost:3000,https://thebestrateins-exe201.vercel.app"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_SENDER_EMAIL
+        sync: false
 
 databases:
   - name: insurmatch-db

@@ -1,5 +1,6 @@
 package com.insurmatch.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -27,6 +38,17 @@ public class EmailService {
     @Value("${app.frontend.url:https://thebestrateins-exe201.vercel.app}")
     private String frontendUrl;
 
+    @Value("${resend.api-key:${RESEND_API_KEY:}}")
+    private String resendApiKey;
+
+    @Value("${brevo.api-key:${BREVO_API_KEY:}}")
+    private String brevoApiKey;
+
+    @Value("${app.mail.sender-email:}")
+    private String customSenderEmail;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public boolean isMailConfigured() {
         return mailSender != null
                 && mailUsername != null && !mailUsername.trim().isEmpty()
@@ -34,10 +56,140 @@ public class EmailService {
     }
 
     private String getFromAddress() {
+        if (customSenderEmail != null && !customSenderEmail.trim().isEmpty()) {
+            return customSenderEmail.trim();
+        }
         if (mailUsername != null && !mailUsername.trim().isEmpty()) {
             return mailUsername.trim();
         }
         return fromEmail;
+    }
+
+    /**
+     * Gửi email thống nhất:
+     * 1. Ưu tiên Resend HTTP API (Port 443 — Không bao giờ bị chặn trên Render Free)
+     * 2. Ưu tiên Brevo HTTP API (Port 443 — Miễn phí 300 mail/ngày)
+     * 3. Fallback SMTP truyền thống (khi chạy local hoặc Render có mở cổng)
+     */
+    public boolean sendHtmlEmail(String toEmail, String subject, String htmlContent) {
+        if (resendApiKey != null && !resendApiKey.trim().isEmpty()) {
+            log.info("Sending email to {} via Resend HTTP API (Port 443)...", toEmail);
+            if (sendViaResend(toEmail, subject, htmlContent)) {
+                return true;
+            }
+        }
+
+        if (brevoApiKey != null && !brevoApiKey.trim().isEmpty()) {
+            log.info("Sending email to {} via Brevo HTTP API (Port 443)...", toEmail);
+            if (sendViaBrevo(toEmail, subject, htmlContent)) {
+                return true;
+            }
+        }
+
+        if (isMailConfigured()) {
+            log.info("Sending email to {} via JavaMail SMTP...", toEmail);
+            return sendViaSmtp(toEmail, subject, htmlContent);
+        }
+
+        log.info("No email API Key (RESEND_API_KEY / BREVO_API_KEY) configured. Credentials logged to console.");
+        return true;
+    }
+
+    private boolean sendViaResend(String toEmail, String subject, String htmlContent) {
+        try {
+            String from = customSenderEmail != null && !customSenderEmail.trim().isEmpty()
+                    ? customSenderEmail.trim()
+                    : "InsurMatch <onboarding@resend.dev>";
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("from", from);
+            body.put("to", List.of(toEmail));
+            body.put("subject", subject);
+            body.put("html", htmlContent);
+
+            String jsonPayload = objectMapper.writeValueAsString(body);
+
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .build();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey.trim())
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(10))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("Successfully sent email via Resend API to {}. Response: {}", toEmail, response.body());
+                return true;
+            } else {
+                log.warn("Resend API failed with status {}: {}", response.statusCode(), response.body());
+                return false;
+            }
+        } catch (Exception e) {
+            log.warn("Error sending email via Resend API to {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean sendViaBrevo(String toEmail, String subject, String htmlContent) {
+        try {
+            String senderEmail = getFromAddress();
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("sender", Map.of("name", "InsurMatch Platform", "email", senderEmail));
+            body.put("to", List.of(Map.of("email", toEmail)));
+            body.put("subject", subject);
+            body.put("htmlContent", htmlContent);
+
+            String jsonPayload = objectMapper.writeValueAsString(body);
+
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .build();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("api-key", brevoApiKey.trim())
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(10))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("Successfully sent email via Brevo API to {}. Response: {}", toEmail, response.body());
+                return true;
+            } else {
+                log.warn("Brevo API failed with status {}: {}", response.statusCode(), response.body());
+                return false;
+            }
+        } catch (Exception e) {
+            log.warn("Error sending email via Brevo API to {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean sendViaSmtp(String toEmail, String subject, String htmlContent) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(getFromAddress(), "InsurMatch Platform");
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Successfully sent email via SMTP to {}", toEmail);
+            return true;
+        } catch (Exception e) {
+            log.warn("SMTP sending to {} failed: {}", toEmail, e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -46,30 +198,9 @@ public class EmailService {
      */
     public boolean sendOtpEmail(String toEmail, String otp, String recipientName) {
         logOtpToConsole(toEmail, otp, recipientName);
-
-        if (!isMailConfigured()) {
-            log.info("JavaMailSender credentials are not configured. OTP printed to console.");
-            return true;
-        }
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail, "InsurMatch CRM");
-            helper.setTo(toEmail);
-            helper.setSubject("🛡️ [InsurMatch] Mã xác thực OTP đăng ký tài khoản: " + otp);
-
-            String htmlContent = buildOtpHtmlContent(recipientName, otp);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-            log.info("Successfully sent OTP email to {}", toEmail);
-            return true;
-        } catch (Exception e) {
-            log.warn("Could not send real email to {} (Reason: {}). OTP is available in console.", toEmail, e.getMessage());
-            return true;
-        }
+        String subject = "🛡️ [InsurMatch] Mã xác thực OTP đăng ký tài khoản: " + otp;
+        String htmlContent = buildOtpHtmlContent(recipientName, otp);
+        return sendHtmlEmail(toEmail, subject, htmlContent);
     }
 
     /**
@@ -87,29 +218,9 @@ public class EmailService {
                 "================================================================================",
                 toEmail, recipientName != null ? recipientName : "User", otp);
 
-        if (!isMailConfigured()) {
-            log.info("JavaMailSender credentials are not configured. Reset OTP printed to console.");
-            return true;
-        }
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(getFromAddress(), "InsurMatch Security");
-            helper.setTo(toEmail);
-            helper.setSubject("🔑 [InsurMatch] Yêu cầu đặt lại mật khẩu: " + otp);
-
-            String htmlContent = buildResetPasswordHtmlContent(recipientName, otp);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-            log.info("Successfully sent Password Reset OTP email to {}", toEmail);
-            return true;
-        } catch (Exception e) {
-            log.warn("Could not send real reset email to {} (Reason: {}). OTP is available in console.", toEmail, e.getMessage());
-            return true;
-        }
+        String subject = "🔑 [InsurMatch] Yêu cầu đặt lại mật khẩu: " + otp;
+        String htmlContent = buildResetPasswordHtmlContent(recipientName, otp);
+        return sendHtmlEmail(toEmail, subject, htmlContent);
     }
 
     private void logOtpToConsole(String toEmail, String otp, String name) {
@@ -242,29 +353,9 @@ public class EmailService {
                 "================================================================================",
                 toEmail, recipientName != null ? recipientName : "Member", roleName, temporaryPassword, portalUrl);
 
-        if (!isMailConfigured()) {
-            log.info("JavaMailSender credentials are not configured. Account credentials printed to console log above.");
-            return true;
-        }
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(getFromAddress(), "InsurMatch Platform");
-            helper.setTo(toEmail);
-            helper.setSubject("🎉 [InsurMatch] Thông tin tài khoản cổng đối tác của bạn");
-
-            String htmlContent = buildWelcomeAccountHtmlContent(recipientName, toEmail, temporaryPassword, roleName);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-            log.info("Successfully sent Welcome Account email to {}", toEmail);
-            return true;
-        } catch (Exception e) {
-            log.warn("Could not send real welcome email to {} (Reason: {}). Credentials are in console.", toEmail, e.getMessage());
-            return true;
-        }
+        String subject = "🎉 [InsurMatch] Thông tin tài khoản cổng đối tác của bạn";
+        String htmlContent = buildWelcomeAccountHtmlContent(recipientName, toEmail, temporaryPassword, roleName);
+        return sendHtmlEmail(toEmail, subject, htmlContent);
     }
 
     private String buildWelcomeAccountHtmlContent(String name, String email, String password, String role) {
