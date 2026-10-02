@@ -75,8 +75,9 @@ public class ContactDTO {
     @JsonAlias({"howDoYouKnowUs"})
     private String sourceChannel;
 
-    @JsonAlias({"whoReferClient", "teleSaleTeam"})
     private String sourceDetail;
+    private String teleSaleTeam;
+    private String whoReferClient;
 
     // ---- Household info ----
     @JsonAlias({"household"})

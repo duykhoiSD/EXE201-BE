@@ -43,4 +43,8 @@ public class CreateDealRequest {
     private BigDecimal subsidyAmount;
     private BigDecimal agencyCommission;
     private String bonusTier;
+    private String paymentOption;
+    private String paymentVerification;
+    private String contactPhone;
+    private String contactEmail;
 }
