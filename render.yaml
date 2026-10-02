@@ -34,7 +34,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        value: "http://localhost:5173,http://localhost:3000"
+        value: "http://localhost:5173,http://localhost:3000,https://thebestrateins-exe201.vercel.app"
 
 databases:
   - name: insurmatch-db
