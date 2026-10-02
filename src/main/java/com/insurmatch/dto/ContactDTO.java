@@ -53,6 +53,9 @@ public class ContactDTO {
 
     // ---- Address ----
     private String address;
+    private String mailingAddress;
+    private String streetAddress;
+    private String county;
     private String city;
     private String state;
 

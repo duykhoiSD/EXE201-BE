@@ -230,6 +230,9 @@ public class ContactService {
         if (contactData.getDateExpired() != null) existing.setDateExpired(contactData.getDateExpired());
         // ---- Address ----
         if (contactData.getAddress() != null) existing.setAddress(contactData.getAddress());
+        if (contactData.getMailingAddress() != null) existing.setMailingAddress(contactData.getMailingAddress());
+        if (contactData.getStreetAddress() != null) existing.setStreetAddress(contactData.getStreetAddress());
+        if (contactData.getCounty() != null) existing.setCounty(contactData.getCounty());
         if (contactData.getCity() != null) existing.setCity(contactData.getCity());
         if (contactData.getState() != null) existing.setState(contactData.getState());
         if (contactData.getZipCode() != null) existing.setZipCode(contactData.getZipCode());
@@ -366,6 +369,9 @@ public class ContactService {
                 .certificateNumber(c.getCertificateNumber())
                 .dateExpired(c.getDateExpired())
                 .address(c.getAddress())
+                .mailingAddress(c.getMailingAddress())
+                .streetAddress(c.getStreetAddress())
+                .county(c.getCounty())
                 .city(c.getCity())
                 .state(c.getState())
                 .zipCode(c.getZipCode())
@@ -413,6 +419,9 @@ public class ContactService {
         if (dto.getCertificateNumber() != null) entity.setCertificateNumber(dto.getCertificateNumber());
         if (dto.getDateExpired() != null) entity.setDateExpired(dto.getDateExpired());
         if (dto.getAddress() != null) entity.setAddress(dto.getAddress());
+        if (dto.getMailingAddress() != null) entity.setMailingAddress(dto.getMailingAddress());
+        if (dto.getStreetAddress() != null) entity.setStreetAddress(dto.getStreetAddress());
+        if (dto.getCounty() != null) entity.setCounty(dto.getCounty());
         if (dto.getCity() != null) entity.setCity(dto.getCity());
         if (dto.getState() != null) entity.setState(dto.getState());
         if (dto.getZipCode() != null) entity.setZipCode(dto.getZipCode());

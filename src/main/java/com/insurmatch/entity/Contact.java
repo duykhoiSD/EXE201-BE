@@ -70,11 +70,21 @@ public class Contact {
     @Column(length = 255)
     private String address;
 
+    @Column(name = "mailing_address", length = 255)
+    private String mailingAddress;
+
+    @Column(name = "street_address", length = 255)
+    private String streetAddress;
+
+    @Column(length = 100)
+    private String county;
+
     @Column(length = 100)
     private String city;
 
     @Column(length = 2)
     private String state;
+
 
     @Column(name = "zip_code", length = 10)
     private String zipCode;
