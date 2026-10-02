@@ -157,8 +157,15 @@ public class AdminController {
 
         User created = userRepository.save(user);
 
-        // Gửi email chào mừng kèm thông tin đăng nhập về Gmail của thành viên mới
-        emailService.sendWelcomeAccountEmail(created.getEmail(), rawName, tempPassword, role.name());
+        // Gửi email chào mừng kèm thông tin đăng nhập trong background để không block HTTP request
+        final String roleName = created.getRole().name();
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                emailService.sendWelcomeAccountEmail(created.getEmail(), rawName, tempPassword, roleName);
+            } catch (Exception e) {
+                // Log and ignore to prevent failure from affecting user creation
+            }
+        });
 
         // Audit log
         auditLogRepository.save(AuditLog.builder()

@@ -15,8 +15,30 @@ public class EmailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
     @Value("${spring.mail.username:noreply@insurmatch.us}")
     private String fromEmail;
+
+    @Value("${app.frontend.url:https://thebestrateins-exe201.vercel.app}")
+    private String frontendUrl;
+
+    public boolean isMailConfigured() {
+        return mailSender != null
+                && mailUsername != null && !mailUsername.trim().isEmpty()
+                && mailPassword != null && !mailPassword.trim().isEmpty();
+    }
+
+    private String getFromAddress() {
+        if (mailUsername != null && !mailUsername.trim().isEmpty()) {
+            return mailUsername.trim();
+        }
+        return fromEmail;
+    }
 
     /**
      * Gửi email mã OTP xác thực tài khoản.
@@ -25,8 +47,8 @@ public class EmailService {
     public boolean sendOtpEmail(String toEmail, String otp, String recipientName) {
         logOtpToConsole(toEmail, otp, recipientName);
 
-        if (mailSender == null) {
-            log.info("JavaMailSender is not configured. OTP printed to console.");
+        if (!isMailConfigured()) {
+            log.info("JavaMailSender credentials are not configured. OTP printed to console.");
             return true;
         }
 
@@ -65,8 +87,8 @@ public class EmailService {
                 "================================================================================",
                 toEmail, recipientName != null ? recipientName : "User", otp);
 
-        if (mailSender == null) {
-            log.info("JavaMailSender is not configured. Reset OTP printed to console.");
+        if (!isMailConfigured()) {
+            log.info("JavaMailSender credentials are not configured. Reset OTP printed to console.");
             return true;
         }
 
@@ -74,7 +96,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail, "InsurMatch Security");
+            helper.setFrom(getFromAddress(), "InsurMatch Security");
             helper.setTo(toEmail);
             helper.setSubject("🔑 [InsurMatch] Yêu cầu đặt lại mật khẩu: " + otp);
 
@@ -207,6 +229,8 @@ public class EmailService {
      * Gửi email chào mừng và bàn giao thông tin đăng nhập Portal cho Agent/Staff mới do Admin tạo.
      */
     public boolean sendWelcomeAccountEmail(String toEmail, String recipientName, String temporaryPassword, String roleName) {
+        String portalUrl = frontendUrl != null ? frontendUrl + "/login" : "https://thebestrateins-exe201.vercel.app/login";
+
         log.info("\n" +
                 "================================================================================\n" +
                 "🎉 [INSURMATCH EMAIL SERVICE — WELCOME NEW MEMBER]\n" +
@@ -214,12 +238,12 @@ public class EmailService {
                 "To:                 {} ({})\n" +
                 "Role:               {}\n" +
                 "Initial Password:   {}\n" +
-                "Portal URL:         http://localhost:5173/login\n" +
+                "Portal URL:         {}\n" +
                 "================================================================================",
-                toEmail, recipientName != null ? recipientName : "Member", roleName, temporaryPassword);
+                toEmail, recipientName != null ? recipientName : "Member", roleName, temporaryPassword, portalUrl);
 
-        if (mailSender == null) {
-            log.info("JavaMailSender is not configured. Account info printed to console.");
+        if (!isMailConfigured()) {
+            log.info("JavaMailSender credentials are not configured. Account credentials printed to console log above.");
             return true;
         }
 
@@ -227,7 +251,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail, "InsurMatch Platform");
+            helper.setFrom(getFromAddress(), "InsurMatch Platform");
             helper.setTo(toEmail);
             helper.setSubject("🎉 [InsurMatch] Thông tin tài khoản cổng đối tác của bạn");
 
