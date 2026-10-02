@@ -83,7 +83,7 @@ public class AdminController {
     // ── Account Management ───────────────────────────────────────────────────
     @GetMapping("/accounts")
     public ResponseEntity<ApiResponse<List<AccountResponse>>> getAccounts() {
-        List<AccountResponse> accounts = userRepository.findAll().stream()
+        List<AccountResponse> accounts = userRepository.findAllByOrderByIdDesc().stream()
                 .map(AccountResponse::fromUser)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(accounts));
