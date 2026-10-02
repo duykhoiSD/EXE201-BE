@@ -245,6 +245,10 @@ public class ContactService {
         // ---- How do you know us ----
         if (contactData.getSourceChannel() != null) existing.setSourceChannel(contactData.getSourceChannel());
         if (contactData.getSourceDetail() != null) existing.setSourceDetail(contactData.getSourceDetail());
+        if (contactData.getLanguage() != null) existing.setLanguage(contactData.getLanguage());
+        if (contactData.getStatus() != null) existing.setStatus(contactData.getStatus());
+        if (contactData.getTeleSaleTeam() != null) existing.setTeleSaleTeam(contactData.getTeleSaleTeam());
+        if (contactData.getWhoReferClient() != null) existing.setWhoReferClient(contactData.getWhoReferClient());
         // ---- Household info ----
         if (contactData.getHouseholdSize() != null) existing.setHouseholdSize(contactData.getHouseholdSize());
         if (contactData.getEstimatedIncome() != null) existing.setEstimatedIncome(contactData.getEstimatedIncome());
@@ -362,8 +366,10 @@ public class ContactService {
                 .dateOfBirth(c.getDateOfBirth())
                 .ssn(c.getSsn())
                 .gender(c.getGender())
-                .language("Vietnamese")
-                .status("Active")
+                .language(c.getLanguage() != null ? c.getLanguage() : "Vietnamese")
+                .status(c.getStatus() != null ? c.getStatus() : "Active")
+                .teleSaleTeam(c.getTeleSaleTeam())
+                .whoReferClient(c.getWhoReferClient())
                 .immigrationStatus(c.getImmigrationStatus())
                 .alienNumber(c.getAlienNumber())
                 .certificateNumber(c.getCertificateNumber())
@@ -431,6 +437,10 @@ public class ContactService {
         if (dto.getPocRelationship() != null) entity.setPocRelationship(dto.getPocRelationship());
         if (dto.getSourceChannel() != null) entity.setSourceChannel(dto.getSourceChannel());
         if (dto.getSourceDetail() != null) entity.setSourceDetail(dto.getSourceDetail());
+        if (dto.getLanguage() != null) entity.setLanguage(dto.getLanguage());
+        if (dto.getStatus() != null) entity.setStatus(dto.getStatus());
+        if (dto.getTeleSaleTeam() != null) entity.setTeleSaleTeam(dto.getTeleSaleTeam());
+        if (dto.getWhoReferClient() != null) entity.setWhoReferClient(dto.getWhoReferClient());
         if (dto.getHouseholdSize() != null) entity.setHouseholdSize(dto.getHouseholdSize());
         if (dto.getEstimatedIncome() != null) entity.setEstimatedIncome(dto.getEstimatedIncome());
         if (dto.getAcaUsername() != null) entity.setAcaUsername(dto.getAcaUsername());

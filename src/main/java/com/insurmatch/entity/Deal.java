@@ -162,6 +162,18 @@ public class Deal {
     @Column(name = "bonus_tier", length = 50)
     private String bonusTier;
 
+    @Column(name = "payment_option", length = 50)
+    private String paymentOption;
+
+    @Column(name = "payment_verification", length = 100)
+    private String paymentVerification;
+
+    @Column(name = "contact_phone", length = 20)
+    private String contactPhone;
+
+    @Column(name = "contact_email", length = 150)
+    private String contactEmail;
+
     // ---- Relationships ----
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contact_id", nullable = false)

@@ -240,6 +240,10 @@ public class DealService {
                 .subsidyAmount(req.getSubsidyAmount())
                 .agencyCommission(req.getAgencyCommission())
                 .bonusTier(req.getBonusTier() != null ? req.getBonusTier() : "Standard Tier")
+                .paymentOption(req.getPaymentOption())
+                .paymentVerification(req.getPaymentVerification())
+                .contactPhone(req.getContactPhone())
+                .contactEmail(req.getContactEmail())
                 .dealOwner(owner)
                 .supportAgent(owner)
                 .build();
@@ -346,6 +350,10 @@ public class DealService {
         if (req.getSubsidyAmount() != null) deal.setSubsidyAmount(req.getSubsidyAmount());
         if (req.getAgencyCommission() != null) deal.setAgencyCommission(req.getAgencyCommission());
         if (req.getBonusTier() != null) deal.setBonusTier(req.getBonusTier());
+        if (req.getPaymentOption() != null) deal.setPaymentOption(req.getPaymentOption());
+        if (req.getPaymentVerification() != null) deal.setPaymentVerification(req.getPaymentVerification());
+        if (req.getContactPhone() != null) deal.setContactPhone(req.getContactPhone());
+        if (req.getContactEmail() != null) deal.setContactEmail(req.getContactEmail());
 
         if (req.getBrokerEffectiveDate() != null && !req.getBrokerEffectiveDate().isBlank()) {
             try {

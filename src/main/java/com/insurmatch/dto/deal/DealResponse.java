@@ -61,6 +61,11 @@ public class DealResponse {
     private String terminationDate;
     private String closedLostReason;
 
+    private String paymentOption;
+    private String paymentVerification;
+    private String contactPhone;
+    private String contactEmail;
+
     private DealOwnerDto dealOwner;
     private DealOwnerDto lastModifiedBy;
     private String lastModifiedTime;
@@ -204,6 +209,10 @@ public class DealResponse {
                 .brokerEffectiveDate(deal.getBrokerEffectiveDate() != null ? deal.getBrokerEffectiveDate().toString() : "")
                 .terminationDate(deal.getTerminationDate() != null ? deal.getTerminationDate().toString() : "")
                 .closedLostReason(deal.getClosedLostReason() != null ? deal.getClosedLostReason() : "---")
+                .paymentOption(deal.getPaymentOption())
+                .paymentVerification(deal.getPaymentVerification())
+                .contactPhone(deal.getContactPhone())
+                .contactEmail(deal.getContactEmail())
                 .dealOwner(ownerDto)
                 .lastModifiedBy(DealOwnerDto.builder().name("Platform Staff").avatar("PS").bg("bg-teal-600 text-white").build())
                 .lastModifiedTime("Vừa cập nhật")

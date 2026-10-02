@@ -110,6 +110,18 @@ public class Contact {
     @Column(name = "source_detail", length = 255)
     private String sourceDetail;
 
+    @Column(length = 50)
+    private String language;
+
+    @Column(length = 50)
+    private String status;
+
+    @Column(name = "tele_sale_team", length = 100)
+    private String teleSaleTeam;
+
+    @Column(name = "who_refer_client", length = 150)
+    private String whoReferClient;
+
     // ---- Household info ----
     @Column(name = "household_size")
     private Integer householdSize;
