@@ -129,6 +129,19 @@ public class TicketService {
             if (ticket.getServiceAgent() == null) {
                 ticket.setServiceAgent(currentUser);
             }
+        } else {
+            if (ticket.getTicketOwnerId() != null) {
+                userRepository.findById(ticket.getTicketOwnerId()).ifPresent(ticket::setTicketOwner);
+            } else if (ticket.getTicketOwnerName() != null && !ticket.getTicketOwnerName().isBlank()) {
+                List<User> found = userRepository.searchByName(ticket.getTicketOwnerName().trim());
+                if (!found.isEmpty()) ticket.setTicketOwner(found.get(0));
+            }
+            if (ticket.getServiceAgentId() != null) {
+                userRepository.findById(ticket.getServiceAgentId()).ifPresent(ticket::setServiceAgent);
+            } else if (ticket.getServiceAgentName() != null && !ticket.getServiceAgentName().isBlank()) {
+                List<User> found = userRepository.searchByName(ticket.getServiceAgentName().trim());
+                if (!found.isEmpty()) ticket.setServiceAgent(found.get(0));
+            }
         }
 
         // SOP 4: Default due date = +3 business days if not set
@@ -181,8 +194,47 @@ public class TicketService {
             // Agent CANNOT reassign ticketOwner or serviceAgent
         } else {
             // ADMIN / STAFF can reassign ticketOwner and serviceAgent
-            if (ticketData.getTicketOwner() != null) existing.setTicketOwner(ticketData.getTicketOwner());
-            if (ticketData.getServiceAgent() != null) existing.setServiceAgent(ticketData.getServiceAgent());
+            if (ticketData.getTicketOwnerId() != null) {
+                User owner = userRepository.findById(ticketData.getTicketOwnerId()).orElse(null);
+                existing.setTicketOwner(owner);
+            } else if (ticketData.getTicketOwnerName() != null) {
+                String name = ticketData.getTicketOwnerName().trim();
+                if (name.isEmpty() || name.equalsIgnoreCase("unassigned")) {
+                    existing.setTicketOwner(null);
+                } else {
+                    List<User> found = userRepository.searchByName(name);
+                    if (!found.isEmpty()) {
+                        existing.setTicketOwner(found.get(0));
+                    }
+                }
+            } else if (ticketData.getTicketOwner() != null) {
+                if (ticketData.getTicketOwner().getId() != null) {
+                    userRepository.findById(ticketData.getTicketOwner().getId()).ifPresent(existing::setTicketOwner);
+                } else {
+                    existing.setTicketOwner(ticketData.getTicketOwner());
+                }
+            }
+
+            if (ticketData.getServiceAgentId() != null) {
+                User agent = userRepository.findById(ticketData.getServiceAgentId()).orElse(null);
+                existing.setServiceAgent(agent);
+            } else if (ticketData.getServiceAgentName() != null) {
+                String name = ticketData.getServiceAgentName().trim();
+                if (name.isEmpty() || name.equalsIgnoreCase("unassigned")) {
+                    existing.setServiceAgent(null);
+                } else {
+                    List<User> found = userRepository.searchByName(name);
+                    if (!found.isEmpty()) {
+                        existing.setServiceAgent(found.get(0));
+                    }
+                }
+            } else if (ticketData.getServiceAgent() != null) {
+                if (ticketData.getServiceAgent().getId() != null) {
+                    userRepository.findById(ticketData.getServiceAgent().getId()).ifPresent(existing::setServiceAgent);
+                } else {
+                    existing.setServiceAgent(ticketData.getServiceAgent());
+                }
+            }
         }
 
         // SOP 4 Rule: Require changeDueDateReason when due date is updated

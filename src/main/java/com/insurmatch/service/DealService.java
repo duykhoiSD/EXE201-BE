@@ -192,7 +192,7 @@ public class DealService {
                         .email(req.getContactEmail() != null && !req.getContactEmail().isBlank() ? req.getContactEmail() : "client@insurmatch.us")
                         .phone(req.getContactPhone() != null && !req.getContactPhone().isBlank() ? req.getContactPhone() : "+1 (832) 555-0199")
                         .contactOwner(owner)
-                        .assignedAgent(owner)
+                        .supportAgent(owner)
                         .build());
             } else {
                 List<Contact> allContacts = contactRepository.findAll();
@@ -205,7 +205,7 @@ public class DealService {
                             .email("client@insurmatch.us")
                             .phone("+1 (832) 555-0199")
                             .contactOwner(owner)
-                            .assignedAgent(owner)
+                            .supportAgent(owner)
                             .build());
                 }
             }

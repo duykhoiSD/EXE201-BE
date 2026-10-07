@@ -1,6 +1,7 @@
 package com.insurmatch.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -122,12 +123,90 @@ public class Ticket {
     }
 
     @Transient
+    private Long ticketOwnerId;
+
+    @Transient
+    private String ticketOwnerName;
+
+    @Transient
+    private Long serviceAgentId;
+
+    @Transient
+    private String serviceAgentName;
+
+    @JsonProperty("ticketOwner")
+    public void setTicketOwnerFromJson(Object val) {
+        if (val == null) {
+            this.ticketOwner = null;
+            this.ticketOwnerId = null;
+            this.ticketOwnerName = "";
+            return;
+        }
+        if (val instanceof User u) {
+            this.ticketOwner = u;
+            this.ticketOwnerId = u.getId();
+            this.ticketOwnerName = u.getFullName();
+        } else if (val instanceof String s) {
+            this.ticketOwnerName = s;
+        } else if (val instanceof Number n) {
+            this.ticketOwnerId = n.longValue();
+        } else if (val instanceof java.util.Map<?, ?> map) {
+            if (map.get("id") instanceof Number idVal) {
+                this.ticketOwnerId = idVal.longValue();
+            }
+            if (map.get("fullName") instanceof String fn) {
+                this.ticketOwnerName = fn;
+            } else if (map.get("name") instanceof String n) {
+                this.ticketOwnerName = n;
+            }
+        }
+    }
+
+    @JsonProperty("serviceAgent")
+    public void setServiceAgentFromJson(Object val) {
+        if (val == null) {
+            this.serviceAgent = null;
+            this.serviceAgentId = null;
+            this.serviceAgentName = "";
+            return;
+        }
+        if (val instanceof User u) {
+            this.serviceAgent = u;
+            this.serviceAgentId = u.getId();
+            this.serviceAgentName = u.getFullName();
+        } else if (val instanceof String s) {
+            this.serviceAgentName = s;
+        } else if (val instanceof Number n) {
+            this.serviceAgentId = n.longValue();
+        } else if (val instanceof java.util.Map<?, ?> map) {
+            if (map.get("id") instanceof Number idVal) {
+                this.serviceAgentId = idVal.longValue();
+            }
+            if (map.get("fullName") instanceof String fn) {
+                this.serviceAgentName = fn;
+            } else if (map.get("name") instanceof String n) {
+                this.serviceAgentName = n;
+            }
+        }
+    }
+
+    @Transient
     public String getTicketOwnerName() {
+        if (ticketOwnerName != null && !ticketOwnerName.isBlank()) return ticketOwnerName;
         return ticketOwner != null ? ticketOwner.getFullName() : null;
+    }
+
+    public void setTicketOwnerName(String ticketOwnerName) {
+        this.ticketOwnerName = ticketOwnerName;
     }
 
     @Transient
     public String getServiceAgentName() {
+        if (serviceAgentName != null && !serviceAgentName.isBlank()) return serviceAgentName;
         return serviceAgent != null ? serviceAgent.getFullName() : null;
+    }
+
+    public void setServiceAgentName(String serviceAgentName) {
+        this.serviceAgentName = serviceAgentName;
     }
 }
