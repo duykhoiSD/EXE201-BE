@@ -142,35 +142,7 @@ public class DealService {
 
     @Transactional
     public DealResponse createDeal(CreateDealRequest req) {
-        // 1. Resolve Contact
-        Contact contact = null;
-        if (req.getContactId() != null && !req.getContactId().isBlank()) {
-            try {
-                contact = contactService.getContactByIdOrCode(req.getContactId());
-            } catch (Exception ignored) {}
-        }
-        if (contact == null && req.getContactName() != null && !req.getContactName().isBlank()) {
-            List<Contact> foundContacts = contactRepository.searchContacts(req.getContactName());
-            if (!foundContacts.isEmpty()) {
-                contact = foundContacts.get(0);
-            }
-        }
-        if (contact == null) {
-            // Find any contact or create minimal
-            List<Contact> allContacts = contactRepository.findAll();
-            if (!allContacts.isEmpty()) {
-                contact = allContacts.get(0);
-            } else {
-                contact = contactRepository.save(Contact.builder()
-                        .firstName(req.getContactName() != null ? req.getContactName() : "Hai")
-                        .lastName("Nguyen")
-                        .email("client@insurmatch.us")
-                        .phone("+1 (832) 555-0199")
-                        .build());
-            }
-        }
-
-        // 2. Resolve Deal Owner
+        // 1. Resolve Deal Owner
         User currentUser = getCurrentAuthenticatedUser();
         User owner = null;
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
@@ -188,6 +160,54 @@ public class DealService {
             }
             if (owner == null) {
                 owner = currentUser != null ? currentUser : userRepository.findAll().stream().findFirst().orElse(null);
+            }
+        }
+
+        // 2. Resolve Contact
+        Contact contact = null;
+        if (req.getContactId() != null && !req.getContactId().isBlank()) {
+            try {
+                contact = contactService.getContactByIdOrCode(req.getContactId());
+            } catch (Exception ignored) {}
+        }
+        if (contact == null && req.getContactName() != null && !req.getContactName().isBlank()) {
+            List<Contact> foundContacts = contactRepository.searchContacts(req.getContactName().trim());
+            if (!foundContacts.isEmpty()) {
+                contact = foundContacts.get(0);
+            }
+        }
+        if (contact == null) {
+            if (req.getContactName() != null && !req.getContactName().isBlank()) {
+                String full = req.getContactName().trim();
+                String first = full;
+                String last = "";
+                int lastSpace = full.lastIndexOf(' ');
+                if (lastSpace > 0) {
+                    first = full.substring(0, lastSpace);
+                    last = full.substring(lastSpace + 1);
+                }
+                contact = contactRepository.save(Contact.builder()
+                        .firstName(first)
+                        .lastName(last)
+                        .email(req.getContactEmail() != null && !req.getContactEmail().isBlank() ? req.getContactEmail() : "client@insurmatch.us")
+                        .phone(req.getContactPhone() != null && !req.getContactPhone().isBlank() ? req.getContactPhone() : "+1 (832) 555-0199")
+                        .contactOwner(owner)
+                        .assignedAgent(owner)
+                        .build());
+            } else {
+                List<Contact> allContacts = contactRepository.findAll();
+                if (!allContacts.isEmpty()) {
+                    contact = allContacts.get(0);
+                } else {
+                    contact = contactRepository.save(Contact.builder()
+                            .firstName("Hai")
+                            .lastName("Nguyen")
+                            .email("client@insurmatch.us")
+                            .phone("+1 (832) 555-0199")
+                            .contactOwner(owner)
+                            .assignedAgent(owner)
+                            .build());
+                }
             }
         }
 
