@@ -139,6 +139,25 @@ public class Contact {
     @Column(name = "aca_status", length = 30)
     private String acaStatus; // PENDING, VERIFIED, DONE, NEED_CALL_TO_VERIFIED
 
+    // ---- Additional ACA & Primary fields ----
+    @Column(length = 150)
+    private String career;
+
+    @Column(name = "the_best_rate_email", length = 150)
+    private String theBestRateEmail;
+
+    @Column(name = "aca_status_special", length = 50)
+    private String acaStatusSpecial;
+
+    @Column(name = "aca_account_special", length = 100)
+    private String acaAccountSpecial;
+
+    @Column(name = "aca_pass_special", length = 100)
+    private String acaPassSpecial;
+
+    @Column(name = "enroll_call_rep", length = 100)
+    private String enrollCallRep;
+
     // ---- Ownership ----
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contact_owner_id")

@@ -256,6 +256,12 @@ public class ContactService {
         if (contactData.getAcaUsername() != null) existing.setAcaUsername(contactData.getAcaUsername());
         if (contactData.getAcaPassword() != null) existing.setAcaPassword(contactData.getAcaPassword());
         if (contactData.getAcaStatus() != null) existing.setAcaStatus(contactData.getAcaStatus());
+        if (contactData.getCareer() != null) existing.setCareer(contactData.getCareer());
+        if (contactData.getTheBestRateEmail() != null) existing.setTheBestRateEmail(contactData.getTheBestRateEmail());
+        if (contactData.getAcaStatusSpecial() != null) existing.setAcaStatusSpecial(contactData.getAcaStatusSpecial());
+        if (contactData.getAcaAccountSpecial() != null) existing.setAcaAccountSpecial(contactData.getAcaAccountSpecial());
+        if (contactData.getAcaPassSpecial() != null) existing.setAcaPassSpecial(contactData.getAcaPassSpecial());
+        if (contactData.getEnrollCallRep() != null) existing.setEnrollCallRep(contactData.getEnrollCallRep());
         // ---- Ownership ----
         if (contactData.getObShareOwner() != null) existing.setObShareOwner(contactData.getObShareOwner());
         if (contactData.getMedicareShareOwner() != null) existing.setMedicareShareOwner(contactData.getMedicareShareOwner());
@@ -392,6 +398,12 @@ public class ContactService {
                 .acaUsername(c.getAcaUsername())
                 .acaPassword(c.getAcaPassword())
                 .acaStatus(c.getAcaStatus())
+                .career(c.getCareer())
+                .theBestRateEmail(c.getTheBestRateEmail())
+                .acaStatusSpecial(c.getAcaStatusSpecial())
+                .acaAccountSpecial(c.getAcaAccountSpecial())
+                .acaPassSpecial(c.getAcaPassSpecial())
+                .enrollCallRep(c.getEnrollCallRep())
                 .contactOwnerId(c.getContactOwner() != null ? c.getContactOwner().getId() : null)
                 .contactOwnerName(c.getContactOwner() != null ? c.getContactOwner().getName() : null)
                 .contactOwner(ownerSummary)
@@ -446,6 +458,12 @@ public class ContactService {
         if (dto.getAcaUsername() != null) entity.setAcaUsername(dto.getAcaUsername());
         if (dto.getAcaPassword() != null) entity.setAcaPassword(dto.getAcaPassword());
         if (dto.getAcaStatus() != null) entity.setAcaStatus(dto.getAcaStatus());
+        if (dto.getCareer() != null) entity.setCareer(dto.getCareer());
+        if (dto.getTheBestRateEmail() != null) entity.setTheBestRateEmail(dto.getTheBestRateEmail());
+        if (dto.getAcaStatusSpecial() != null) entity.setAcaStatusSpecial(dto.getAcaStatusSpecial());
+        if (dto.getAcaAccountSpecial() != null) entity.setAcaAccountSpecial(dto.getAcaAccountSpecial());
+        if (dto.getAcaPassSpecial() != null) entity.setAcaPassSpecial(dto.getAcaPassSpecial());
+        if (dto.getEnrollCallRep() != null) entity.setEnrollCallRep(dto.getEnrollCallRep());
         if (dto.getObShareOwner() != null) entity.setObShareOwner(dto.getObShareOwner());
         if (dto.getMedicareShareOwner() != null) entity.setMedicareShareOwner(dto.getMedicareShareOwner());
         if (dto.getLifeShareOwner() != null) entity.setLifeShareOwner(dto.getLifeShareOwner());

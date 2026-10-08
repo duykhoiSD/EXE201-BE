@@ -91,6 +91,21 @@ public class ContactDTO {
     @JsonAlias({"acaAccountStatus"})
     private String acaStatus;
 
+    // ---- Additional ACA & Primary fields ----
+    private String career;
+    private String theBestRateEmail;
+    
+    @JsonAlias({"acaStatusSpecial", "acaStatus Special"})
+    private String acaStatusSpecial;
+    
+    @JsonAlias({"acaAccountSpecial"})
+    private String acaAccountSpecial;
+    
+    @JsonAlias({"acaPassSpecial", "acaPass Special"})
+    private String acaPassSpecial;
+    
+    private String enrollCallRep;
+
     // ---- Ownership ----
     private Long contactOwnerId;
     private String contactOwnerName;
