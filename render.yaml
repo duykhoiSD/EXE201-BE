@@ -10,25 +10,15 @@ services:
       - key: PORT
         value: 8080
       - key: DB_HOST
-        fromDatabase:
-          name: insurmatch-db
-          property: host
+        value: ep-frosty-cake-b3n48slb.c-4.ap-southeast-1.aws.neon.tech
       - key: DB_PORT
-        fromDatabase:
-          name: insurmatch-db
-          property: port
+        value: 5432
       - key: DB_NAME
-        fromDatabase:
-          name: insurmatch-db
-          property: database
+        value: neondb
       - key: DB_USERNAME
-        fromDatabase:
-          name: insurmatch-db
-          property: user
+        value: neondb_owner
       - key: DB_PASSWORD
-        fromDatabase:
-          name: insurmatch-db
-          property: password
+        value: npg_3yzNmcRX2Spq
       - key: DB_SSL
         value: "?sslmode=require"
       - key: JWT_SECRET
@@ -41,10 +31,3 @@ services:
         sync: false
       - key: MAIL_SENDER_EMAIL
         sync: false
-
-databases:
-  - name: insurmatch-db
-    plan: free
-    region: singapore
-    databaseName: insurmatch_db
-    user: insurmatch_user
