@@ -85,14 +85,7 @@ public class ContactService {
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
 
-        // RBAC: Agent can only view their own contact
-        User currentUser = getCurrentAuthenticatedUser();
-        if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
-            if (contact.getContactOwner() == null || !contact.getContactOwner().getId().equals(currentUser.getId())) {
-                throw new AccessDeniedException("Bạn chỉ có quyền xem hồ sơ khách hàng do mình phụ trách!");
-            }
-        }
-
+        validateAgentAccess(contact);
         return contact;
     }
 
@@ -135,7 +128,12 @@ public class ContactService {
     private void validateAgentAccess(Contact contact) {
         User currentUser = getCurrentAuthenticatedUser();
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
-            if (contact.getContactOwner() == null || !contact.getContactOwner().getId().equals(currentUser.getId())) {
+            boolean isContactOwner = contact.getContactOwner() != null
+                    && contact.getContactOwner().getId().equals(currentUser.getId());
+            boolean isDealOwner = !isContactOwner && contact.getId() != null
+                    && dealRepository.findByContactId(contact.getId()).stream()
+                            .anyMatch(d -> d.getDealOwner() != null && d.getDealOwner().getId().equals(currentUser.getId()));
+            if (!isContactOwner && !isDealOwner) {
                 throw new AccessDeniedException("Bạn chỉ có quyền xem hồ sơ khách hàng do mình phụ trách!");
             }
         }

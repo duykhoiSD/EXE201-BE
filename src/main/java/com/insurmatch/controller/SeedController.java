@@ -83,7 +83,7 @@ public class SeedController {
                 .department("Operations Hub")
                 .status("Active")
                 .complianceStatus("Verified & Cleared")
-                .role(User.Role.ADMIN).active(true).emailVerified(true).build());
+                .role(User.Role.STAFF).active(true).emailVerified(true).build());
 
         User agent = userRepository.save(User.builder()
                 .email("agent@insurmatch.us")
@@ -289,7 +289,7 @@ public class SeedController {
 
         // ── Seed Commissions ─────────────────────────────────────────────────
         commissionRepository.save(Commission.builder()
-                .agentName("Licensed Agent").agentNpn("20011862")
+                .agentName("Licensed Agent Partner").agentNpn("20011862")
                 .carrier("Ambetter").planName("Ambetter Balanced Care 3")
                 .policyId("POL-78234").memberCount(3)
                 .grossAmount(75.0).supportDeduction(15.0).netAmount(60.0)
