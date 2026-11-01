@@ -354,11 +354,15 @@ public class EmailService {
                 toEmail, recipientName != null ? recipientName : "Member", roleName, temporaryPassword, portalUrl);
 
         String subject = "🎉 [InsurMatch] Thông tin tài khoản cổng đối tác của bạn";
-        String htmlContent = buildWelcomeAccountHtmlContent(recipientName, toEmail, temporaryPassword, roleName);
+        String htmlContent = buildWelcomeAccountHtmlContent(recipientName, toEmail, temporaryPassword, roleName, portalUrl);
         return sendHtmlEmail(toEmail, subject, htmlContent);
     }
 
-    private String buildWelcomeAccountHtmlContent(String name, String email, String password, String role) {
+    private String buildWelcomeAccountHtmlContent(String name, String email, String password, String role, String portalUrl) {
+        String targetUrl = portalUrl != null && !portalUrl.trim().isEmpty()
+                ? portalUrl.trim()
+                : "https://thebestrateins-exe201.vercel.app/login";
+
         return "<!DOCTYPE html>" +
                 "<html>" +
                 "<head><meta charset='UTF-8'></head>" +
@@ -380,7 +384,7 @@ public class EmailService {
                 "              <h2 style='color:#0F172A;margin-top:0;font-size:20px;'>Chào mừng bạn gia nhập mạng lưới InsurMatch!</h2>" +
                 "              <p style='color:#475569;font-size:15px;line-height:1.6;margin-bottom:20px;'>" +
                 "                Xin chào <strong>" + (name != null ? name : "Quý đối tác") + "</strong>,<br>" +
-                "                Quản trị viên đã khởi tạo thành công tài khoản thành viên của bạn trên nền tảng <strong>InsurMatch CRM</strong> với vai trò: <strong style='color:#0B172A;text-transform:uppercase;'>" + role + "</strong>." +
+                "                Tài khoản của bạn trên nền tảng <strong>InsurMatch CRM</strong> đã được kích hoạt thành công với vai trò: <strong style='color:#0B172A;text-transform:uppercase;'>" + role + "</strong>." +
                 "              </p>" +
                 "              <!-- Credentials Box -->" +
                 "              <div style='background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin:24px 0;'>" +
@@ -393,7 +397,7 @@ public class EmailService {
                 "              </div>" +
                 "              <!-- CTA Button -->" +
                 "              <div style='text-align:center;margin:30px 0;'>" +
-                "                <a href='http://localhost:5173/login' style='background-color:#0B172A;color:#FFFFFF;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(11,23,42,0.2);'>Đăng Nhập Cổng Portal →</a>" +
+                "                <a href='" + targetUrl + "' style='background-color:#0B172A;color:#FFFFFF;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(11,23,42,0.2);'>Đăng Nhập Cổng Portal →</a>" +
                 "              </div>" +
                 "              <p style='color:#64748B;font-size:13px;line-height:1.5;'>" +
                 "                🔒 <em>Lưu ý an ninh:</em> Vì lý do bảo mật, vui lòng đăng nhập và thực hiện đổi mật khẩu cá nhân ngay trong lần truy cập đầu tiên." +

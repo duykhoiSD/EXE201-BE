@@ -18,6 +18,7 @@ public class QuoteRequestService {
     private final QuoteRequestRepository quoteRequestRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public List<QuoteRequest> getAllQuotes() {
         return quoteRequestRepository.findAllByOrderByCreatedAtDesc();
@@ -36,10 +37,11 @@ public class QuoteRequestService {
         // Tự động khởi tạo tài khoản Agent dùng thử 60 ngày nếu email chưa tồn tại trong hệ thống
         if (quote.getEmail() != null && !quote.getEmail().trim().isEmpty()) {
             String normalizedEmail = quote.getEmail().trim().toLowerCase();
+            String fullName = quote.getFullName() != null && !quote.getFullName().trim().isEmpty()
+                    ? quote.getFullName().trim()
+                    : "Trial Agent";
+
             if (!userRepository.existsByEmail(normalizedEmail)) {
-                String fullName = quote.getFullName() != null && !quote.getFullName().trim().isEmpty()
-                        ? quote.getFullName().trim()
-                        : "Trial Agent";
                 String[] parts = fullName.split("\\s+", 2);
                 String fName = parts[0];
                 String lName = parts.length > 1 ? parts[1] : "Agent";
@@ -59,6 +61,18 @@ public class QuoteRequestService {
                         .emailVerified(true)
                         .build();
                 userRepository.save(trialUser);
+            }
+
+            // Gửi email chào mừng kèm thông tin tài khoản và mật khẩu đăng nhập trực tiếp về hộp thư
+            try {
+                emailService.sendWelcomeAccountEmail(
+                        normalizedEmail,
+                        fullName,
+                        "Agent@123",
+                        "Agent (Dùng thử miễn phí 60 ngày)"
+                );
+            } catch (Exception e) {
+                // Non-blocking: ghi log và tiếp tục
             }
         }
 
