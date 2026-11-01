@@ -26,6 +26,36 @@ public class QuoteRequest {
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
+    @Transient
+    private String firstName;
+
+    @Transient
+    private String lastName;
+
+    @Transient
+    private String name;
+
+    @Transient
+    private String howDoYouKnowUs;
+
+    @PrePersist
+    @PreUpdate
+    public void ensureFullNameAndNotes() {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            String combined = ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+            if (combined.isEmpty() && name != null) {
+                combined = name.trim();
+            }
+            if (combined.isEmpty()) {
+                combined = email != null && email.contains("@") ? email.split("@")[0] : "Prospective Client";
+            }
+            fullName = combined;
+        }
+        if ((notes == null || notes.trim().isEmpty()) && howDoYouKnowUs != null && !howDoYouKnowUs.trim().isEmpty()) {
+            notes = howDoYouKnowUs.trim();
+        }
+    }
+
     @Column(length = 150)
     private String email;
 
