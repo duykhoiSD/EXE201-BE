@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping({"/api/saas-plans", "/saas-plans"})
 @RequiredArgsConstructor
 public class SaasPlanController {
 
@@ -23,7 +23,7 @@ public class SaasPlanController {
      * 1. Lấy danh sách toàn bộ các gói SaaS đang hoạt động (Public API)
      * GET /api/saas-plans
      */
-    @GetMapping("/saas-plans")
+    @GetMapping({"", "/"})
     public ResponseEntity<ApiResponse<List<SaasPlan>>> getActivePlans() {
         // Tự động khởi tạo dữ liệu mẫu nếu bảng trong DB đang rỗng
         if (saasPlanRepository.count() == 0) {
@@ -37,7 +37,7 @@ public class SaasPlanController {
      * 2. Lấy chi tiết một gói theo mã (TRIAL, STARTER, PROFESSIONAL, AGENCY)
      * GET /api/saas-plans/{code}
      */
-    @GetMapping("/saas-plans/{code}")
+    @GetMapping("/{code}")
     public ResponseEntity<ApiResponse<SaasPlan>> getPlanByCode(@PathVariable String code) {
         SaasPlan plan = saasPlanRepository.findByPlanCode(code.trim().toUpperCase())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy gói: " + code));
@@ -48,7 +48,7 @@ public class SaasPlanController {
      * 3. Dành cho Admin: Cập nhật giá tiền hoặc hạn mức của một gói
      * PUT /api/admin/saas-plans/{id}
      */
-    @PutMapping("/admin/saas-plans/{id}")
+    @PutMapping("/admin/{id}")
     public ResponseEntity<ApiResponse<SaasPlan>> updatePlan(@PathVariable Long id, @RequestBody SaasPlan updatedData) {
         SaasPlan existing = saasPlanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy gói ID: " + id));
@@ -148,3 +148,4 @@ public class SaasPlanController {
         log.info("Đã khởi tạo thành công 4 gói dịch vụ vào bảng saas_plans!");
     }
 }
+

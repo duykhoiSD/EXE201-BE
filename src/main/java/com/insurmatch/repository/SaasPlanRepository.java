@@ -16,3 +16,4 @@ public interface SaasPlanRepository extends JpaRepository<SaasPlan, Long> {
 
     boolean existsByPlanCode(String planCode);
 }
+
