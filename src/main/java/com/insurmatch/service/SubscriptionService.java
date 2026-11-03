@@ -23,7 +23,8 @@ public class SubscriptionService {
     private final ContactRepository contactRepository;
 
     /**
-     * Lấy thông tin gói dịch vụ hiện tại của User (hoặc khởi tạo gói mặc định 60 ngày nếu chưa có)
+     * Lấy thông tin gói dịch vụ hiện tại của User (hoặc khởi tạo gói mặc định 60
+     * ngày nếu chưa có)
      */
     @Transactional
     public Subscription getOrCreateUserSubscription(User user) {
@@ -117,4 +118,3 @@ public class SubscriptionService {
         return overview;
     }
 }
-

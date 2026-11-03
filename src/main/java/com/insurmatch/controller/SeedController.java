@@ -44,6 +44,7 @@ public class SeedController {
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
     private final SubscriptionRepository subscriptionRepository;
+    private final SaasPlanRepository saasPlanRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
 
     @PostMapping("/seed")
@@ -682,6 +683,16 @@ public class SeedController {
                 .document(doc2).category("tax")
                 .name("Form_1040_Household_Income_45k.pdf").fullName("Form_1040_Household_Income_45k.pdf")
                 .size("1.9 MB").type("pdf").build());
+
+        // ── 8b. Seed 4 Master SaaS Plans ──────────────────────────────────
+        if (saasPlanRepository.count() == 0) {
+            saasPlanRepository.saveAll(java.util.List.of(
+                SaasPlan.builder().planCode("TRIAL").name("Trial 60 Ngày").targetAudience("Dùng thử miễn phí").monthlyPriceVnd(0L).annualPriceVnd(0L).monthlyPriceUsd(0).annualPriceUsd(0).maxSeats(1).maxContacts(50).storageLimitGb(1).isPopular(false).description("Trải nghiệm đầy đủ tính năng CRM trong 60 ngày hoàn toàn miễn phí.").isActive(true).build(),
+                SaasPlan.builder().planCode("STARTER").name("Starter").targetAudience("Cá nhân đại lý").monthlyPriceVnd(990_000L).annualPriceVnd(9_900_000L).monthlyPriceUsd(39).annualPriceUsd(32).maxSeats(1).maxContacts(100).storageLimitGb(2).isPopular(false).description("Dành cho cá nhân đại lý độc lập.").isActive(true).build(),
+                SaasPlan.builder().planCode("PROFESSIONAL").name("Professional").targetAudience("Đội nhóm nhỏ").monthlyPriceVnd(1_990_000L).annualPriceVnd(19_900_000L).monthlyPriceUsd(79).annualPriceUsd(65).maxSeats(3).maxContacts(200).storageLimitGb(25).isPopular(true).description("Thiết kế cho nhóm đại lý cần tùy chỉnh Pipeline.").isActive(true).build(),
+                SaasPlan.builder().planCode("AGENCY").name("Agency").targetAudience("Đại lý lớn").monthlyPriceVnd(4_990_000L).annualPriceVnd(49_900_000L).monthlyPriceUsd(199).annualPriceUsd(165).maxSeats(10).maxContacts(300).storageLimitGb(100).isPopular(false).description("Hạ tầng quản lý toàn diện cả Agency.").isActive(true).build()
+            ));
+        }
 
         // ── 9. Seed Subscriptions & PayOS Transactions ──────────────────────
         subscriptionRepository.save(com.insurmatch.entity.Subscription.builder()

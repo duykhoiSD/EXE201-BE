@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insurmatch.config.PayOSConfig;
 import com.insurmatch.entity.PaymentTransaction;
+import com.insurmatch.entity.SaasPlan;
+import com.insurmatch.repository.SaasPlanRepository;
 import com.insurmatch.entity.Subscription;
 import com.insurmatch.entity.User;
 import com.insurmatch.exception.ResourceNotFoundException;
@@ -33,6 +35,7 @@ public class PayOSService {
     private final PayOSConfig payOSConfig;
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final SaasPlanRepository saasPlanRepository;
     private final EmailService emailService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -76,6 +79,17 @@ public class PayOSService {
     public long calculatePriceVnd(String planTier, String billingCycle) {
         String cleanPlan = String.valueOf(planTier).trim().toUpperCase();
         String cleanCycle = String.valueOf(billingCycle).trim().toUpperCase();
+
+        if (saasPlanRepository != null) {
+            Optional<SaasPlan> planOpt = saasPlanRepository.findByPlanCode(cleanPlan);
+            if (planOpt.isPresent()) {
+                SaasPlan plan = planOpt.get();
+                if ("ANNUAL".equals(cleanCycle)) {
+                    return plan.getAnnualPriceVnd() != null ? plan.getAnnualPriceVnd() : 9_900_000L;
+                }
+                return plan.getMonthlyPriceVnd() != null ? plan.getMonthlyPriceVnd() : 990_000L;
+            }
+        }
 
         if ("ANNUAL".equals(cleanCycle)) {
             return ANNUAL_PRICES_VND.getOrDefault(cleanPlan, 9_900_000L);
@@ -281,9 +295,23 @@ public class PayOSService {
         sub.setStatus("ACTIVE");
         sub.setStartDate(now);
         sub.setEndDate(newEnd);
-        sub.setSeatsLimit(PLAN_SEATS.getOrDefault(planTier, 1));
-        sub.setContactsLimit(PLAN_CONTACTS.getOrDefault(planTier, 100));
-        sub.setStorageLimitGb(PLAN_STORAGE_GB.getOrDefault(planTier, 2));
+        int seats = PLAN_SEATS.getOrDefault(planTier, 1);
+        int contacts = PLAN_CONTACTS.getOrDefault(planTier, 100);
+        int storage = PLAN_STORAGE_GB.getOrDefault(planTier, 2);
+
+        if (saasPlanRepository != null) {
+            Optional<SaasPlan> planOpt = saasPlanRepository.findByPlanCode(planTier);
+            if (planOpt.isPresent()) {
+                SaasPlan p = planOpt.get();
+                if (p.getMaxSeats() != null) seats = p.getMaxSeats();
+                if (p.getMaxContacts() != null) contacts = p.getMaxContacts();
+                if (p.getStorageLimitGb() != null) storage = p.getStorageLimitGb();
+            }
+        }
+
+        sub.setSeatsLimit(seats);
+        sub.setContactsLimit(contacts);
+        sub.setStorageLimitGb(storage);
         sub.setLastPaymentMethod("VietQR PayOS (" + tx.getAmount() + " VND)");
         subscriptionRepository.save(sub);
 

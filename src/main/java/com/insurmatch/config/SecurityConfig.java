@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/", "/health", "/api/health", "/api/quotes/**", "/api/seed", "/api/payments/payos/webhook").permitAll()
+                        .requestMatchers("/", "/health", "/api/health", "/api/quotes/**", "/api/seed", "/api/saas-plans/**", "/api/payments/payos/webhook").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
