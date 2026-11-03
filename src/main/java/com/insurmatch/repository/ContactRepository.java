@@ -26,6 +26,8 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
     @Query("SELECT c FROM Contact c WHERE c.contactOwner.id = :ownerId")
     List<Contact> findByContactOwnerId(@Param("ownerId") Long ownerId);
 
+    long countByContactOwnerId(Long ownerId);
+
     @Query("SELECT c FROM Contact c WHERE " +
            "(LOWER(c.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(c.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

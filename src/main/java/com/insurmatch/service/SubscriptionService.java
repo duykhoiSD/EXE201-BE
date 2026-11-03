@@ -47,22 +47,50 @@ public class SubscriptionService {
     }
 
     /**
-     * Kiểm tra xem User đã vượt quá hạn mức hồ sơ khách hàng (Contacts Quota) hay chưa
+     * Kiểm tra và tính toán công thức hạn mức (Quota Metrics):
+     * 1. Customer Contacts Quota: usedContacts / maxContacts (VD: 8 / 200)
+     * 2. Account Seats: usedSeats / maxSeats (VD: 1 / 3)
+     * 3. Next Renewal: Ngày gia hạn tiếp theo (VD: 2026-12-18)
      */
     public Map<String, Object> checkContactQuota(User user) {
         Subscription sub = getOrCreateUserSubscription(user);
-        long currentContacts = contactRepository.count(); // For agent, count contacts assigned to them
+
+        long currentContacts = 0;
+        if (user != null && user.getId() != null) {
+            currentContacts = contactRepository.countByContactOwnerId(user.getId());
+            // Nếu là Admin/Staff hoặc chưa có contact riêng, đếm tổng contact hệ thống
+            if (currentContacts == 0 && (user.getRole() == User.Role.ADMIN || user.getRole() == User.Role.STAFF)) {
+                currentContacts = contactRepository.count();
+            }
+        } else {
+            currentContacts = contactRepository.count();
+        }
+
         int limit = sub.getContactsLimit() != null ? sub.getContactsLimit() : 100;
+        int seatsLimit = sub.getSeatsLimit() != null ? sub.getSeatsLimit() : 1;
         boolean canAddMore = currentContacts < limit;
 
+        LocalDateTime endDate = sub.getEndDate();
+        long daysRemaining = endDate != null
+                ? Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), endDate))
+                : 60;
+
+        String nextRenewalStr = endDate != null ? endDate.toLocalDate().toString() : "";
+
         Map<String, Object> result = new HashMap<>();
+        result.put("usedContacts", currentContacts);
+        result.put("maxContacts", limit);
         result.put("currentCount", currentContacts);
         result.put("limit", limit);
+        result.put("usedSeats", 1);
+        result.put("maxSeats", seatsLimit);
         result.put("canAddMore", canAddMore);
         result.put("planTier", sub.getPlanTier());
-        result.put("daysRemaining", sub.getEndDate() != null
-                ? Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), sub.getEndDate()))
-                : 60);
+        result.put("billingCycle", sub.getBillingCycle());
+        result.put("status", sub.getStatus());
+        result.put("nextRenewalDate", nextRenewalStr);
+        result.put("daysRemaining", daysRemaining);
+        result.put("storageLimitGb", sub.getStorageLimitGb() != null ? sub.getStorageLimitGb() : 2);
         return result;
     }
 

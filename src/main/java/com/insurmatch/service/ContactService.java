@@ -36,6 +36,7 @@ public class ContactService {
     private final TicketRepository ticketRepository;
     private final CustomerDocumentRepository customerDocumentRepository;
     private final UserRepository userRepository;
+    private final SubscriptionService subscriptionService;
 
     private User getCurrentAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -169,9 +170,22 @@ public class ContactService {
 
     // ===================== CREATE =====================
 
+    private void validateContactQuota(User user) {
+        if (user != null && user.getRole() == User.Role.AGENT) {
+            java.util.Map<String, Object> quota = subscriptionService.checkContactQuota(user);
+            Boolean canAddMore = (Boolean) quota.get("canAddMore");
+            if (canAddMore != null && !canAddMore) {
+                int limit = (int) quota.get("maxContacts");
+                String plan = String.valueOf(quota.get("planTier"));
+                throw new IllegalArgumentException("Hạn mức hồ sơ khách hàng đã đạt tối đa (" + limit + "/" + limit + " contacts của gói " + plan + "). Vui lòng nâng cấp gói SaaS để thêm mới!");
+            }
+        }
+    }
+
     @Transactional
     public Contact createContact(Contact contact) {
         User currentUser = getCurrentAuthenticatedUser();
+        validateContactQuota(currentUser);
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
             contact.setContactOwner(currentUser);
         } else if (contact.getContactOwner() == null && currentUser != null) {
@@ -183,6 +197,7 @@ public class ContactService {
     @Transactional
     public Contact createContactFromDTO(ContactDTO dto) {
         User currentUser = getCurrentAuthenticatedUser();
+        validateContactQuota(currentUser);
         if (currentUser != null && currentUser.getRole() == User.Role.AGENT) {
             dto.setContactOwnerId(currentUser.getId());
             dto.setContactOwnerName(currentUser.getName());
