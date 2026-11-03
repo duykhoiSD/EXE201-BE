@@ -43,6 +43,8 @@ public class SeedController {
     private final DocumentFileRepository fileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
+    private final SubscriptionRepository subscriptionRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
 
     @PostMapping("/seed")
     public ResponseEntity<ApiResponse<Map<String, Object>>> seedDatabase() {
@@ -65,6 +67,8 @@ public class SeedController {
         quoteRequestRepository.deleteAll();
         contactRepository.deleteAll();
         auditLogRepository.deleteAll();
+        paymentTransactionRepository.deleteAll();
+        subscriptionRepository.deleteAll();
         userRepository.deleteAll();
 
         LocalDate today = LocalDate.now();
@@ -679,6 +683,36 @@ public class SeedController {
                 .name("Form_1040_Household_Income_45k.pdf").fullName("Form_1040_Household_Income_45k.pdf")
                 .size("1.9 MB").type("pdf").build());
 
+        // ── 9. Seed Subscriptions & PayOS Transactions ──────────────────────
+        subscriptionRepository.save(com.insurmatch.entity.Subscription.builder()
+                .user(demoAgent)
+                .planTier("PROFESSIONAL")
+                .billingCycle("MONTHLY")
+                .status("ACTIVE")
+                .startDate(today.minusDays(15).atStartOfDay())
+                .endDate(today.plusDays(45).atStartOfDay())
+                .seatsLimit(3)
+                .contactsLimit(200)
+                .storageLimitGb(25)
+                .lastPaymentMethod("VietQR PayOS (1.990.000 VND)")
+                .build());
+
+        paymentTransactionRepository.save(com.insurmatch.entity.PaymentTransaction.builder()
+                .orderCode(26001099L)
+                .user(demoAgent)
+                .amount(1_990_000L)
+                .currency("VND")
+                .description("IM PROFESSIONAL")
+                .planTier("PROFESSIONAL")
+                .billingCycle("MONTHLY")
+                .status("PAID")
+                .payosPaymentLinkId("link_demo_payos_01")
+                .accountNumber("0838780005")
+                .accountName("THE BEST RATE INSURANCE")
+                .bankBin("970422")
+                .paymentDate(today.minusDays(15).atStartOfDay())
+                .build());
+
         Map<String, Object> result = Map.of(
                 "users", 4,
                 "contacts", 8,
@@ -688,7 +722,8 @@ public class SeedController {
                 "quoteRequests", 2,
                 "notes", 2,
                 "commissions", 4,
-                "documents", 2
+                "documents", 2,
+                "subscriptions", 1
         );
 
         return ResponseEntity.ok(ApiResponse.success("Database seeded successfully with 8 rich demo profiles (Turning 65 Medicare & ACA Renewals)", result));
