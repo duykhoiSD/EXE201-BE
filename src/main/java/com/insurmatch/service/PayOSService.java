@@ -154,10 +154,20 @@ public class PayOSService {
                 if (response.statusCode() == 200 && "00".equals(resJson.path("code").asText())) {
                     JsonNode dataNode = resJson.path("data");
                     checkoutUrl = dataNode.path("checkoutUrl").asText(returnUrl);
-                    qrCodeUrl = dataNode.path("qrCode").asText();
+                    String rawQr = dataNode.path("qrCode").asText();
                     accountNumber = dataNode.path("accountNumber").asText(accountNumber);
                     accountName = dataNode.path("accountName").asText(accountName);
                     bankBin = dataNode.path("bin").asText(bankBin);
+
+                    if (rawQr != null && !rawQr.isBlank()) {
+                        if (rawQr.startsWith("http")) {
+                            qrCodeUrl = rawQr;
+                        } else {
+                            qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + java.net.URLEncoder.encode(rawQr, StandardCharsets.UTF_8);
+                        }
+                    } else {
+                        qrCodeUrl = generateStandardVietQrUrl(bankBin, accountNumber, accountName, amount, description);
+                    }
 
                     transaction.setPayosPaymentLinkId(dataNode.path("paymentLinkId").asText());
                     transaction.setPayosCheckoutUrl(checkoutUrl);
@@ -322,3 +332,4 @@ public class PayOSService {
         }
     }
 }
+

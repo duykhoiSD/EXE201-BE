@@ -30,3 +30,4 @@ public class PayOSConfig {
                 && checksumKey != null && !checksumKey.trim().isEmpty();
     }
 }
+

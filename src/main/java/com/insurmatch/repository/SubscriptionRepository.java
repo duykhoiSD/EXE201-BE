@@ -14,3 +14,4 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findByUserIdOrderByCreatedAtDesc(Long userId);
     List<Subscription> findAllByOrderByCreatedAtDesc();
 }
+

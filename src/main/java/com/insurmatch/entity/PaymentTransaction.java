@@ -80,3 +80,4 @@ public class PaymentTransaction {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
+

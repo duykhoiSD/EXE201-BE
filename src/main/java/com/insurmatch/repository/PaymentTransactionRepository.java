@@ -14,3 +14,4 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     List<PaymentTransaction> findAllByOrderByCreatedAtDesc();
     List<PaymentTransaction> findByStatusOrderByCreatedAtDesc(String status);
 }
+

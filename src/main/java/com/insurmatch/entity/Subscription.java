@@ -72,3 +72,4 @@ public class Subscription {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
+
